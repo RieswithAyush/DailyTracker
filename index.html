@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0c0c10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Rhythm</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0c0c10;
+  --surface:     #141419;
+  --surface2:    #1c1c24;
+  --surface3:    #24242e;
+  --border:      #252530;
+  --border2:     #2e2e3c;
+  --text:        #eee9e0;
+  --text-dim:    #8a8aa0;
+  --text-faint:  #44445a;
+  --accent:      #c9956a;
+  --accent-soft: rgba(201,149,106,.12);
+  --accent-dim:  rgba(201,149,106,.5);
+  --health:      #82b882;
+  --mind:        #a494cc;
+  --focus:       #c9956a;
+  --work:        #6a9ec9;
+  --personal:    #c48fa8;
+  --danger:      #c96a6a;
+  --serif:       'Cormorant Garamond', Georgia, serif;
+  --mono:        'DM Mono', 'SF Mono', monospace;
+}
+
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 300;
+  font-size: 13px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 0 5.5rem;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 1.5rem 1.25rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border);
+}
+.logo h1 {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  font-weight: 300;
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+.logo h1 em { font-style: italic; color: var(--accent); }
+.logo-sub {
+  margin-top: .35rem;
+  font-size: .58rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.header-right { text-align: right; }
+#clock {
+  font-family: var(--serif);
+  font-size: 1.9rem;
+  font-weight: 300;
+  color: var(--accent);
+  line-height: 1;
+}
+#date-display {
+  font-size: .55rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: .25rem;
+}
+
+/* ── BOTTOM NAV ── */
+.nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(12,12,16,.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  padding: .9rem .5rem;
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color .18s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
+}
+.nav-btn .nav-icon { font-size: 1rem; opacity: .7; }
+.nav-btn.active { color: var(--accent); }
+.nav-btn.active .nav-icon { opacity: 1; }
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 28px; height: 1.5px;
+  background: var(--accent);
+}
+
+/* ── VIEWS ── */
+.view { display: none; padding: 1.25rem; }
+.view.active { display: block; animation: fadeUp .35s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-label {
+  font-size: .58rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: .9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-label .label-meta {
+  color: var(--text-faint);
+  letter-spacing: .1em;
+}
+
+/* ── HABITS (TODAY) ── */
+.habit-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1rem .85rem;
+  margin-bottom: .65rem;
+  cursor: pointer;
+  transition: all .18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.habit-card:active { transform: scale(.98); }
+.habit-card.done {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+}
+.habit-card .h-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .35rem;
+}
+.habit-card .h-name {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: -.01em;
+}
+.habit-card.done .h-name { color: var(--accent); }
+.habit-card .h-check {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  color: var(--text-faint);
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.habit-card.done .h-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+.habit-card .h-meta {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  font-size: .65rem;
+  color: var(--text-dim);
+  letter-spacing: .05em;
+}
+.habit-card .h-streak {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.habit-card .h-streak.live { color: var(--accent); }
+.habit-card .h-streak .flame { font-size: .75rem; }
+.habit-card .h-input-row {
+  display: flex;
+  gap: .5rem;
+  margin-top: .65rem;
+  padding-top: .65rem;
+  border-top: 1px dashed var(--border);
+  align-items: center;
+  font-size: .68rem;
+  color: var(--text-dim);
+}
+.habit-card .h-input-row label {
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .55rem;
+  color: var(--text-faint);
+}
+.habit-card .h-input {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: .35rem .55rem;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: .7rem;
+  width: 90px;
+}
+.habit-card .h-input:focus { outline: none; border-color: var(--accent); }
+
+/* Wake card special styling */
+.wake-card .wake-display {
+  display: flex;
+  align-items: baseline;
+  gap: .75rem;
+  margin-top: .25rem;
+}
+.wake-card .wake-actual {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--accent);
+  line-height: 1;
+}
+.wake-card .wake-vs {
+  font-size: .58rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.wake-card .wake-delta {
+  font-size: .65rem;
+  margin-top: .35rem;
+}
+.wake-card .wake-delta.early { color: var(--health); }
+.wake-card .wake-delta.late { color: var(--danger); }
+.wake-card .wake-empty {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--text-faint);
+  margin-top: .15rem;
+}
+
+/* ── THOUGHT INPUT ── */
+.thought-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.thought-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.5;
+  resize: none;
+  min-height: 60px;
+  font-style: italic;
+}
+.thought-input::placeholder { color: var(--text-faint); }
+.thought-input:focus { outline: none; }
+.thought-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: .6rem;
+  padding-top: .6rem;
+  border-top: 1px dashed var(--border);
+}
+.thought-tags {
+  display: flex;
+  gap: .3rem;
+  flex-wrap: wrap;
+  font-size: .55rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.thought-tag {
+  padding: .15rem .45rem;
+  border-radius: 3px;
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.thought-tag.detected { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-dim); }
+.thought-save {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 5px;
+  padding: .4rem .8rem;
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 500;
+}
+.thought-save:disabled {
+  background: var(--surface2);
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* Recent thoughts (today view) */
+.recent-thought {
+  padding: .7rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.recent-thought:last-child { border-bottom: none; }
+.recent-thought .rt-time {
+  font-size: .55rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: .25rem;
+}
+.recent-thought .rt-text {
+  font-family: var(--serif);
+  font-size: .95rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--text);
+}
+.recent-thought .rt-tags {
+  margin-top: .35rem;
+  display: flex;
+  gap: .3rem;
+  flex-wrap: wrap;
+}
+.recent-thought .rt-tag {
+  font-size: .5rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.recent-thought {
+  cursor: pointer;
+  transition: background .15s;
+  padding-left: .25rem;
+  padding-right: .25rem;
+  margin-left: -.25rem;
+  margin-right: -.25rem;
+  border-radius: 4px;
+}
+.recent-thought:hover { background: var(--surface); }
+.recent-thought.editing {
+  background: var(--surface);
+  border-bottom: none;
+  padding: .8rem .75rem;
+  margin-bottom: .25rem;
+  border: 1px solid var(--accent-dim);
+}
+.rt-edit-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 1.5;
+  padding: .55rem .65rem;
+  border-radius: 5px;
+  resize: none;
+  min-height: 50px;
+}
+.rt-edit-input:focus { outline: none; border-color: var(--accent); }
+.rt-edit-bar {
+  display: flex;
+  gap: .4rem;
+  margin-top: .55rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+.rt-edit-bar .rt-edit-tags {
+  margin-right: auto;
+  display: flex;
+  gap: .25rem;
+  flex-wrap: wrap;
+}
+.rt-edit-bar .rt-edit-tag {
+  font-size: .5rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: .08rem .35rem;
+  border-radius: 3px;
+}
+.rt-btn {
+  font-family: var(--mono);
+  font-size: .55rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: .4rem .7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-dim);
+}
+.rt-btn:hover { border-color: var(--accent); color: var(--accent); }
+.rt-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 500;
+}
+.rt-btn.danger {
+  border-color: rgba(201,106,106,.4);
+  color: var(--danger);
+}
+.rt-btn.danger:hover { background: rgba(201,106,106,.1); }
+.rt-btn.danger.armed {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--bg);
+  font-weight: 500;
+  animation: armedPulse 1s ease-in-out infinite;
+}
+@keyframes armedPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,106,106,.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(201,106,106,0); }
+}
+
+/* ── MONTH VIEW ── */
+.month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.month-title {
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 300;
+}
+.month-title em { font-style: italic; color: var(--accent); }
+.month-nav {
+  display: flex;
+  gap: .4rem;
+}
+.month-nav button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .8rem;
+  transition: all .15s;
+}
+.month-nav button:hover, .month-nav button:active { border-color: var(--accent); color: var(--accent); }
+
+/* Heatmap */
+.heatmap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem .85rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+.heatmap-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: .65rem;
+  margin-bottom: .4rem;
+}
+.heatmap-row:last-child { margin-bottom: 0; }
+.heatmap-label {
+  font-size: .62rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: right;
+  padding-right: .25rem;
+}
+.heatmap-cells {
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+}
+.hcell {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 14px;
+  min-width: 6px;
+  border-radius: 2px;
+  background: var(--surface3);
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+.hcell.done {
+  background: var(--accent);
+}
+.hcell.today {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+.hcell.future { background: transparent; border: 1px dashed var(--border); }
+.hcell.partial { background: var(--accent-dim); }
+
+/* Wake trend */
+.wake-trend {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem .85rem 1.1rem;
+  margin-bottom: 1.5rem;
+}
+.wake-trend-svg { width: 100%; height: 140px; display: block; }
+.wake-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: 1px dashed var(--border);
+}
+.wake-stat {
+  text-align: center;
+}
+.wake-stat-val {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--accent);
+  line-height: 1;
+}
+.wake-stat-lbl {
+  font-size: .52rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: .25rem;
+}
+
+/* Thoughts feed */
+.tag-filter {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+  margin-bottom: .85rem;
+}
+.tag-filter button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: .3rem .65rem;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s;
+}
+.tag-filter button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+.tag-filter button .count {
+  color: var(--text-faint);
+  margin-left: .25rem;
+  font-size: .55rem;
+}
+.tag-filter button.active .count { color: var(--accent-dim); }
+
+.thoughts-feed {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .25rem 1rem;
+}
+.feed-item {
+  padding: .9rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.feed-item:last-child { border-bottom: none; }
+.feed-item .fi-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: .55rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: .3rem;
+}
+.feed-item .fi-text {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+.feed-item .fi-tags {
+  margin-top: .35rem;
+  display: flex;
+  gap: .35rem;
+}
+.feed-item .fi-tag {
+  font-size: .52rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: .08rem .4rem;
+  border-radius: 3px;
+}
+.empty-state {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--text-faint);
+  font-size: 1rem;
+}
+
+/* ── SCHEDULE VIEW ── */
+.timeline {
+  position: relative;
+  padding-left: 70px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 50px;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent 0%, var(--border2) 6%, var(--border2) 94%, transparent 100%);
+}
+.ti {
+  position: relative;
+  margin-bottom: 2px;
+}
+.ti-time {
+  position: absolute;
+  left: -70px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 58px;
+  text-align: right;
+  font-size: .6rem;
+  color: var(--text-dim);
+}
+.ti-dot {
+  position: absolute;
+  left: -23px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  background: var(--bg);
+  z-index: 1;
+}
+.ti[data-cat="health"]   .ti-dot { border-color: var(--health);   }
+.ti[data-cat="mind"]     .ti-dot { border-color: var(--mind);     }
+.ti[data-cat="focus"]    .ti-dot { border-color: var(--focus); background: var(--focus); }
+.ti[data-cat="work"]     .ti-dot { border-color: var(--work);     }
+.ti[data-cat="personal"] .ti-dot { border-color: var(--personal); }
+.ti.now .ti-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  animation: glow 2.2s ease-in-out infinite;
+}
+@keyframes glow {
+  0%,100% { box-shadow: 0 0 0 3px rgba(201,149,106,.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(201,149,106,.08); }
+}
+.ti-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem .75rem;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+.ti.now .ti-card { background: var(--surface); border-color: rgba(201,149,106,.3); }
+.ti-left { display: flex; align-items: center; gap: .55rem; }
+.ti-icon { font-size: .9rem; }
+.ti-name { font-size: .78rem; }
+.ti.now .ti-name { color: var(--accent); }
+.ti-dur { font-size: .58rem; color: var(--text-faint); letter-spacing: .05em; margin-left: .25rem; }
+.ti-note { font-size: .6rem; color: var(--text-faint); font-style: italic; margin-left: .35rem; }
+
+/* ── EXPORT / SETTINGS ── */
+.settings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.settings-card h3 {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-bottom: .65rem;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .55rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row label {
+  font-size: .65rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.settings-row input[type="time"], .settings-row input[type="text"] {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: .4rem .6rem;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: .8rem;
+}
+.btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: .65rem 1rem;
+  font-family: var(--mono);
+  font-size: .62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+  margin-top: .5rem;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+}
+.btn-ghost:hover, .btn-ghost:active { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 5.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--surface);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  padding: .6rem 1.2rem;
+  border-radius: 8px;
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: all .25s;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 8px 20px rgba(0,0,0,.4);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.error { border-color: var(--danger); color: var(--danger); }
+
+/* ── PATTERNS BLOCK (month view) ── */
+.patterns-card {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.patterns-card h4 {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin-bottom: .55rem;
+}
+.patterns-card h4 em { font-style: italic; color: var(--accent); }
+.patterns-list {
+  list-style: none;
+  font-size: .8rem;
+  color: var(--text-dim);
+}
+.patterns-list li {
+  padding: .35rem 0;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  gap: .55rem;
+  align-items: baseline;
+}
+.patterns-list li:last-child { border-bottom: none; }
+.patterns-list li::before {
+  content: '·';
+  color: var(--accent);
+  font-size: 1.2rem;
+  line-height: .5;
+}
+
+/* ── RESPONSIVE — desktop ── */
+@media (min-width: 720px) {
+  body { padding: 0 0 2rem; max-width: 760px; margin: 0 auto; }
+  header { padding: 2rem 2rem 1.25rem; }
+  .logo h1 { font-size: 3.2rem; }
+  #clock { font-size: 2.6rem; }
+  .view { padding: 1.75rem 2rem; }
+  .nav {
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    background: var(--bg);
+    border-top: none;
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .nav-btn { padding: 1rem .5rem; }
+  .hcell { max-width: 18px; }
+  body { padding-top: 0; }
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <h1>Rhythm<em>.</em></h1>
+    <p class="logo-sub" id="logo-sub">Day 1 · Building</p>
+  </div>
+  <div class="header-right">
+    <div id="clock">--:--</div>
+    <div id="date-display"></div>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" data-view="today">
+    <span class="nav-icon">●</span>
+    <span>Today</span>
+  </button>
+  <button class="nav-btn" data-view="month">
+    <span class="nav-icon">▦</span>
+    <span>Month</span>
+  </button>
+  <button class="nav-btn" data-view="schedule">
+    <span class="nav-icon">◷</span>
+    <span>Schedule</span>
+  </button>
+  <button class="nav-btn" data-view="settings">
+    <span class="nav-icon">⚙</span>
+    <span>More</span>
+  </button>
+</nav>
+
+<!-- ─── TODAY VIEW ─── -->
+<section class="view active" id="view-today">
+  <p class="section-label">Habits Today <span class="label-meta" id="habits-progress">0 / 5</span></p>
+  <div id="habits-container"></div>
+
+  <p class="section-label" style="margin-top:1.5rem">Capture a Thought</p>
+  <div class="thought-card">
+    <textarea class="thought-input" id="thought-input" placeholder="What's on your mind?" rows="2"></textarea>
+    <div class="thought-bar">
+      <div class="thought-tags" id="thought-tags"></div>
+      <button class="thought-save" id="thought-save" disabled>Save</button>
+    </div>
+  </div>
+
+  <p class="section-label">Today's Thoughts <span class="label-meta" id="today-thoughts-count">0</span></p>
+  <div id="today-thoughts"></div>
+</section>
+
+<!-- ─── MONTH VIEW ─── -->
+<section class="view" id="view-month">
+  <div class="month-header">
+    <h2 class="month-title" id="month-title">May <em>2026</em></h2>
+    <div class="month-nav">
+      <button id="month-prev" title="Previous month">‹</button>
+      <button id="month-next" title="Next month">›</button>
+    </div>
+  </div>
+
+  <p class="section-label">Habits — 1% Each Day</p>
+  <div class="heatmap" id="heatmap"></div>
+
+  <p class="section-label">Wake Time vs Target</p>
+  <div class="wake-trend">
+    <svg class="wake-trend-svg" id="wake-svg" viewBox="0 0 600 140" preserveAspectRatio="none"></svg>
+    <div class="wake-stats" id="wake-stats"></div>
+  </div>
+
+  <div class="patterns-card hidden" id="patterns-card">
+    <h4>Patterns this <em>month</em></h4>
+    <ul class="patterns-list" id="patterns-list"></ul>
+  </div>
+
+  <p class="section-label">Thoughts <span class="label-meta" id="month-thoughts-count">0</span></p>
+  <div class="tag-filter" id="tag-filter"></div>
+  <div class="thoughts-feed" id="thoughts-feed"></div>
+</section>
+
+<!-- ─── SCHEDULE VIEW ─── -->
+<section class="view" id="view-schedule">
+  <p class="section-label">Weekday Rhythm</p>
+  <div class="timeline" id="timeline"></div>
+  <p class="section-label" style="margin-top:1.5rem">Weekend Mode</p>
+  <div class="settings-card" style="margin-bottom:0">
+    <p style="font-size:.78rem; color:var(--text-dim); line-height:1.6; font-style:italic; font-family:var(--serif); font-size:.95rem">
+      Longer meditation · personal project block (2 hrs) · family time in afternoon · reading wind-down preserved.
+    </p>
+  </div>
+</section>
+
+<!-- ─── SETTINGS / MORE ─── -->
+<section class="view" id="view-settings">
+  <p class="section-label">Targets</p>
+  <div class="settings-card">
+    <div class="settings-row">
+      <label>Wake target</label>
+      <input type="time" id="wake-target" value="06:30">
+    </div>
+    <div class="settings-row">
+      <label>Sleep target</label>
+      <input type="time" id="sleep-target" value="23:00">
+    </div>
+  </div>
+
+  <p class="section-label">Export / Backup</p>
+  <div class="settings-card">
+    <p style="font-size:.7rem; color:var(--text-dim); line-height:1.5; margin-bottom:.65rem">
+      Download all habits + thoughts as a markdown file for your knowledge base.
+    </p>
+    <button class="btn" id="export-btn">Export Markdown</button>
+    <button class="btn btn-ghost" id="export-json-btn" style="margin-top:.4rem">Export JSON Backup</button>
+  </div>
+
+  <p class="section-label">Restore</p>
+  <div class="settings-card">
+    <p style="font-size:.7rem; color:var(--text-dim); line-height:1.5; margin-bottom:.65rem">
+      Restore from a previously exported JSON backup. This replaces all current data.
+    </p>
+    <input type="file" id="import-file" accept=".json" style="display:none">
+    <button class="btn btn-ghost" id="import-btn">Import JSON</button>
+  </div>
+
+  <p class="section-label">Danger Zone</p>
+  <div class="settings-card">
+    <p style="font-size:.7rem; color:var(--text-dim); line-height:1.5; margin-bottom:.65rem">
+      Wipe all habits, thoughts, and settings. Cannot be undone.
+    </p>
+    <button class="btn btn-danger" id="wipe-btn">Wipe All Data</button>
+  </div>
+
+  <p class="section-label" style="margin-top:1rem">About</p>
+  <div class="settings-card">
+    <p style="font-size:.72rem; color:var(--text-dim); line-height:1.6">
+      <span style="font-family:var(--serif); font-size:.95rem; color:var(--text)">Rhythm</span> — a habit and thought tracker built for monthly pattern recognition. All data lives on this device. Export weekly to keep a backup.
+    </p>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  STATE — single source of truth, persisted to localStorage
+// ════════════════════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'rhythm_v1';
+
+const DEFAULT_HABITS = [
+  { id: 'wake',    name: 'Wake Time',     type: 'time',   targetKey: 'wakeTarget' },
+  { id: 'exercise',name: 'Exercise',      type: 'binary', input: 'minutes' },
+  { id: 'reading', name: 'Reading',       type: 'binary', input: 'minutes' },
+  { id: 'family',  name: 'Family Time',   type: 'binary' },
+  { id: 'market',  name: 'Market / AI',   type: 'binary', input: 'minutes' }
+];
+
+const DEFAULT_SCHEDULE = [
+  { time:"06:30", end:"07:00", label:"Wake & freshen",    icon:"☀️", cat:"health",   dur:"30 min" },
+  { time:"07:00", end:"07:15", label:"Meditation",        icon:"🧘", cat:"mind",     dur:"15 min" },
+  { time:"07:15", end:"08:15", label:"Exercise",          icon:"🏋️", cat:"health",   dur:"60 min" },
+  { time:"08:15", end:"08:45", label:"Shower & breakfast",icon:"🍳", cat:"health",   dur:"30 min" },
+  { time:"08:45", end:"10:00", label:"Reading / Learning",icon:"📖", cat:"mind",     dur:"75 min", note:"market + AI" },
+  { time:"10:00", end:"12:30", label:"Focus Block",       icon:"⚡", cat:"focus",    dur:"2.5 hr", note:"no meetings" },
+  { time:"12:30", end:"13:15", label:"Lunch",             icon:"🍱", cat:"health",   dur:"45 min" },
+  { time:"13:15", end:"19:00", label:"Work Block",        icon:"💼", cat:"work",     dur:"5.75 hr", note:"meetings · async" },
+  { time:"19:00", end:"20:30", label:"Family Time",       icon:"👨‍👩‍👧", cat:"personal", dur:"90 min" },
+  { time:"20:30", end:"21:15", label:"Dinner",            icon:"🍽️", cat:"health",   dur:"45 min" },
+  { time:"21:15", end:"22:30", label:"Wind-down · Read",  icon:"📚", cat:"mind",     dur:"75 min" },
+  { time:"22:30", end:null,    label:"Sleep",             icon:"💤", cat:"health",   dur:"—" }
+];
+
+const TAG_KEYWORDS = {
+  work:    ['work','meeting','team','jira','pi planning','sprint','stakeholder','client','deloitte'],
+  family:  ['family','wife','tanishka','mom','dad','parent','home'],
+  idea:    ['idea','what if','could build','should try','experiment','wonder if'],
+  blocker: ['blocker','blocked','stuck','frustrat','hard','difficult','annoying'],
+  ai:      ['ai','llm','claude','gpt','model','agent','prompt'],
+  pm:      ['pm','product','roadmap','prd','strategy','user','customer'],
+  health:  ['sleep','tired','energy','workout','exercise','meditation','body'],
+  reflect: ['feeling','realiz','noticed','grateful','should','learn','better']
+};
+
+const DEFAULT_STATE = {
+  habits: DEFAULT_HABITS,
+  schedule: DEFAULT_SCHEDULE,
+  // Daily logs keyed by YYYY-MM-DD
+  // logs[date] = { wake: "06:42", exercise: { done:true, minutes:45 }, reading: {...}, ... }
+  logs: {},
+  thoughts: [], // { id, ts, text, tags: [] }
+  settings: {
+    wakeTarget: '06:30',
+    sleepTarget: '23:00',
+    startDate: null  // first day app used
+  }
+};
+
+let state = loadState();
+if (!state.settings.startDate) {
+  state.settings.startDate = isoDate(new Date());
+  saveState();
+}
+
+let currentMonth = new Date(); // for month view navigation
+
+// ════════════════════════════════════════════════════════════════════════════
+//  PERSISTENCE
+// ════════════════════════════════════════════════════════════════════════════
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    const parsed = JSON.parse(raw);
+    // Merge to add new fields gracefully on upgrade
+    return {
+      ...DEFAULT_STATE,
+      ...parsed,
+      settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) }
+    };
+  } catch (e) {
+    console.warn('Load failed, using defaults', e);
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    toast('Storage error — data may not persist', true);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function isoDate(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+function today() { return isoDate(new Date()); }
+
+function timeToMin(t) {
+  if (!t) return null;
+  const [h,m] = t.split(':').map(Number);
+  return h*60 + m;
+}
+function minToTime(m) {
+  const h = Math.floor(m/60), mm = m%60;
+  return String(h).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+}
+
+function daysInMonth(year, month) { return new Date(year, month+1, 0).getDate(); }
+
+function getLog(date) {
+  return state.logs[date] || {};
+}
+
+function setHabitLog(date, habitId, value) {
+  if (!state.logs[date]) state.logs[date] = {};
+  state.logs[date][habitId] = value;
+  saveState();
+}
+
+function habitIsDone(date, habitId) {
+  const log = getLog(date);
+  const v = log[habitId];
+  if (habitId === 'wake') return !!v; // wake = logged time
+  if (!v) return false;
+  return v.done === true;
+}
+
+function streak(habitId) {
+  // count consecutive days from yesterday backwards where habit was done
+  // (today doesn't break streak if not yet done — we look back from today inclusive only if done)
+  let count = 0;
+  const start = new Date();
+  const todayDone = habitIsDone(today(), habitId);
+  if (todayDone) count = 1;
+  for (let i = 1; i < 400; i++) {
+    const d = new Date();
+    d.setDate(start.getDate() - i);
+    if (habitIsDone(isoDate(d), habitId)) count++;
+    else break;
+  }
+  return count;
+}
+
+function detectTags(text) {
+  const lower = text.toLowerCase();
+  const matched = [];
+  for (const [tag, keywords] of Object.entries(TAG_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) matched.push(tag);
+  }
+  return matched;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  CLOCK
+// ════════════════════════════════════════════════════════════════════════════
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('date-display').textContent =
+    `${DAYS[n.getDay()]}, ${n.getDate()} ${MONTHS[n.getMonth()]}`;
+
+  // Days since start
+  if (state.settings.startDate) {
+    const start = new Date(state.settings.startDate);
+    const diff = Math.floor((n - start) / (1000*60*60*24)) + 1;
+    document.getElementById('logo-sub').textContent = `Day ${diff} · Building`;
+  }
+}
+tick();
+setInterval(tick, 20000);
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TODAY VIEW — HABITS
+// ════════════════════════════════════════════════════════════════════════════
+function renderHabits() {
+  const container = document.getElementById('habits-container');
+  const date = today();
+  const log = getLog(date);
+  let done = 0;
+
+  container.innerHTML = state.habits.map(h => {
+    const isDone = habitIsDone(date, h.id);
+    if (isDone) done++;
+    const s = streak(h.id);
+    const streakHtml = s > 0
+      ? `<span class="h-streak ${s >= 3 ? 'live' : ''}"><span class="flame">${s >= 7 ? '🔥' : s >= 3 ? '✦' : '·'}</span>${s} day${s===1?'':'s'}</span>`
+      : `<span class="h-streak"><span class="flame">·</span>start today</span>`;
+
+    if (h.id === 'wake') {
+      const actual = log.wake;
+      const target = state.settings.wakeTarget;
+      let display, deltaClass = '', deltaText = '';
+      if (actual) {
+        display = `<span class="wake-actual">${actual}</span><span class="wake-vs">vs ${target}</span>`;
+        const diff = timeToMin(actual) - timeToMin(target);
+        if (diff <= 0) { deltaClass = 'early'; deltaText = diff === 0 ? 'on target' : `${-diff} min before target`; }
+        else { deltaClass = 'late'; deltaText = `${diff} min after target`; }
+      } else {
+        display = `<span class="wake-empty">Tap to log</span>`;
+      }
+      return `
+        <div class="habit-card wake-card ${actual ? 'done' : ''}" data-habit="wake">
+          <div class="h-top">
+            <div>
+              <div class="h-name">${h.name}</div>
+              <div class="wake-display">${display}</div>
+              ${deltaText ? `<div class="wake-delta ${deltaClass}">${deltaText}</div>` : ''}
+            </div>
+            <div class="h-check">${actual ? '✓' : '+'}</div>
+          </div>
+          <div class="h-meta">
+            <span>target ${target}</span>
+            ${streakHtml}
+          </div>
+        </div>`;
+    }
+
+    const v = log[h.id] || {};
+    const minutes = v.minutes || '';
+    return `
+      <div class="habit-card ${isDone ? 'done' : ''}" data-habit="${h.id}">
+        <div class="h-top">
+          <div class="h-name">${h.name}</div>
+          <div class="h-check">${isDone ? '✓' : '+'}</div>
+        </div>
+        <div class="h-meta">
+          ${streakHtml}
+        </div>
+        ${isDone && h.input === 'minutes' ? `
+          <div class="h-input-row" data-stop="1">
+            <label>minutes</label>
+            <input type="number" class="h-input" data-minutes="${h.id}" value="${minutes}" placeholder="0" min="0" max="999">
+          </div>` : ''}
+      </div>`;
+  }).join('');
+
+  document.getElementById('habits-progress').textContent = `${done} / ${state.habits.length}`;
+
+  // Wire up habit taps
+  container.querySelectorAll('.habit-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('[data-stop]')) return;
+      const id = card.dataset.habit;
+      onHabitTap(id);
+    });
+  });
+  container.querySelectorAll('.h-input[data-minutes]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const id = inp.dataset.minutes;
+      const log = getLog(today());
+      log[id] = { ...(log[id] || {}), done: true, minutes: parseInt(inp.value, 10) || 0 };
+      setHabitLog(today(), id, log[id]);
+    });
+  });
+}
+
+function onHabitTap(habitId) {
+  const date = today();
+  const log = getLog(date);
+  if (habitId === 'wake') {
+    // Tap-to-log: confirm "now" or let them pick
+    const now = new Date();
+    const cur = log.wake;
+    if (cur) {
+      // Allow re-prompting with manual entry
+      const ans = prompt(`Wake time logged at ${cur}. Update to:`, cur);
+      if (ans && /^\d{2}:\d{2}$/.test(ans)) {
+        setHabitLog(date, 'wake', ans);
+        toast(`Wake updated to ${ans}`);
+      } else if (ans === '') {
+        delete state.logs[date].wake; saveState();
+        toast('Wake cleared');
+      }
+    } else {
+      const nowStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+      const ans = prompt(`Log wake time. Press OK for now (${nowStr}), or type HH:MM`, nowStr);
+      if (ans === null) return;
+      const final = /^\d{2}:\d{2}$/.test(ans) ? ans : nowStr;
+      setHabitLog(date, 'wake', final);
+      toast(`Woke at ${final}`);
+    }
+  } else {
+    const cur = log[habitId] || {};
+    const newDone = !cur.done;
+    setHabitLog(date, habitId, { ...cur, done: newDone });
+    if (newDone) toast(`✓ ${state.habits.find(h=>h.id===habitId).name} done`);
+  }
+  renderHabits();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TODAY VIEW — THOUGHTS
+// ════════════════════════════════════════════════════════════════════════════
+const thoughtInput = document.getElementById('thought-input');
+const thoughtSave  = document.getElementById('thought-save');
+const thoughtTags  = document.getElementById('thought-tags');
+
+function updateThoughtTags() {
+  const text = thoughtInput.value.trim();
+  thoughtSave.disabled = text.length === 0;
+  const detected = detectTags(text);
+  const allTags = Object.keys(TAG_KEYWORDS);
+  thoughtTags.innerHTML = allTags.map(t =>
+    `<span class="thought-tag ${detected.includes(t) ? 'detected' : ''}">${t}</span>`
+  ).join('');
+}
+
+thoughtInput.addEventListener('input', () => {
+  updateThoughtTags();
+  // auto-grow
+  thoughtInput.style.height = 'auto';
+  thoughtInput.style.height = thoughtInput.scrollHeight + 'px';
+});
+thoughtSave.addEventListener('click', () => {
+  const text = thoughtInput.value.trim();
+  if (!text) return;
+  const tags = detectTags(text);
+  state.thoughts.push({
+    id: 't_' + Date.now(),
+    ts: new Date().toISOString(),
+    text,
+    tags
+  });
+  saveState();
+  thoughtInput.value = '';
+  thoughtInput.style.height = 'auto';
+  updateThoughtTags();
+  renderTodayThoughts();
+  toast('Thought saved');
+});
+updateThoughtTags();
+
+let editingThoughtId = null;
+let deleteArmedId = null; // id of thought where delete button is armed for second tap
+
+function renderTodayThoughts() {
+  const todayStr = today();
+  const items = state.thoughts
+    .filter(t => t.ts.startsWith(todayStr))
+    .sort((a,b) => b.ts.localeCompare(a.ts));
+  document.getElementById('today-thoughts-count').textContent = items.length;
+  const container = document.getElementById('today-thoughts');
+  if (items.length === 0) {
+    container.innerHTML = `<div class="empty-state">No thoughts yet today.</div>`;
+    return;
+  }
+  container.innerHTML = items.map(t => {
+    const d = new Date(t.ts);
+    const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    if (editingThoughtId === t.id) {
+      const armed = deleteArmedId === t.id;
+      return `
+        <div class="recent-thought editing" data-id="${t.id}">
+          <div class="rt-time">${time} · editing</div>
+          <textarea class="rt-edit-input" id="edit-input-${t.id}" rows="2">${escapeHtml(t.text)}</textarea>
+          <div class="rt-edit-bar">
+            <div class="rt-edit-tags" id="edit-tags-${t.id}"></div>
+            <button type="button" class="rt-btn danger ${armed ? 'armed' : ''}" data-action="delete" data-id="${t.id}">${armed ? 'Tap again to confirm' : 'Delete'}</button>
+            <button type="button" class="rt-btn" data-action="cancel" data-id="${t.id}">Cancel</button>
+            <button type="button" class="rt-btn primary" data-action="save" data-id="${t.id}">Save</button>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="recent-thought" data-id="${t.id}">
+        <div class="rt-time">${time} · tap to edit</div>
+        <div class="rt-text">${escapeHtml(t.text)}</div>
+        ${t.tags.length ? `<div class="rt-tags">${t.tags.map(tag => `<span class="rt-tag">· ${tag}</span>`).join('')}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Wire up taps (non-editing → start editing)
+  container.querySelectorAll('.recent-thought:not(.editing)').forEach(el => {
+    el.addEventListener('click', () => {
+      editingThoughtId = el.dataset.id;
+      deleteArmedId = null;
+      renderTodayThoughts();
+      const input = document.getElementById(`edit-input-${editingThoughtId}`);
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+        autoGrow(input);
+        updateEditTags(editingThoughtId);
+        input.addEventListener('input', () => {
+          autoGrow(input);
+          updateEditTags(editingThoughtId);
+        });
+      }
+    });
+  });
+
+  // Wire up edit buttons (capture clicks AND touchend, stop propagation aggressively)
+  container.querySelectorAll('.rt-btn').forEach(btn => {
+    const handler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'cancel') {
+        editingThoughtId = null;
+        deleteArmedId = null;
+        renderTodayThoughts();
+      } else if (action === 'save') {
+        const input = document.getElementById(`edit-input-${id}`);
+        const newText = input.value.trim();
+        if (!newText) {
+          toast('Thought cannot be empty', true);
+          return;
+        }
+        const thought = state.thoughts.find(t => t.id === id);
+        if (thought) {
+          thought.text = newText;
+          thought.tags = detectTags(newText);
+          saveState();
+        }
+        editingThoughtId = null;
+        deleteArmedId = null;
+        renderTodayThoughts();
+        toast('Thought updated');
+      } else if (action === 'delete') {
+        // Two-tap confirm: first tap arms, second tap deletes
+        if (deleteArmedId !== id) {
+          deleteArmedId = id;
+          renderTodayThoughts();
+          // Auto-disarm after 4 seconds
+          setTimeout(() => {
+            if (deleteArmedId === id) {
+              deleteArmedId = null;
+              if (editingThoughtId === id) renderTodayThoughts();
+            }
+          }, 4000);
+          return;
+        }
+        // Confirmed — perform delete
+        state.thoughts = state.thoughts.filter(t => t.id !== id);
+        saveState();
+        editingThoughtId = null;
+        deleteArmedId = null;
+        renderTodayThoughts();
+        toast('Thought deleted');
+      }
+    };
+    btn.addEventListener('click', handler);
+  });
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function updateEditTags(id) {
+  const input = document.getElementById(`edit-input-${id}`);
+  const tagsEl = document.getElementById(`edit-tags-${id}`);
+  if (!input || !tagsEl) return;
+  const detected = detectTags(input.value);
+  tagsEl.innerHTML = detected.map(t => `<span class="rt-edit-tag">${t}</span>`).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  MONTH VIEW — HEATMAP + WAKE TREND + THOUGHTS
+// ════════════════════════════════════════════════════════════════════════════
+function renderMonth() {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const days = daysInMonth(year, month);
+  const todayDate = new Date();
+  const isCurrentMonth = year === todayDate.getFullYear() && month === todayDate.getMonth();
+  const todayDay = todayDate.getDate();
+
+  document.getElementById('month-title').innerHTML = `${MONTHS[month]} <em>${year}</em>`;
+
+  // Heatmap
+  const heatmap = document.getElementById('heatmap');
+  heatmap.innerHTML = state.habits.map(h => {
+    const cells = [];
+    for (let d = 1; d <= days; d++) {
+      const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isFuture = isCurrentMonth ? d > todayDay : (year > todayDate.getFullYear() || (year === todayDate.getFullYear() && month > todayDate.getMonth()));
+      const isToday = isCurrentMonth && d === todayDay;
+      const done = habitIsDone(date, h.id);
+      let cls = 'hcell';
+      if (done) cls += ' done';
+      if (isFuture) cls += ' future';
+      if (isToday) cls += ' today';
+      cells.push(`<div class="${cls}" title="${date}${done?' ✓':''}"></div>`);
+    }
+    return `
+      <div class="heatmap-row">
+        <span class="heatmap-label">${h.name}</span>
+        <div class="heatmap-cells">${cells.join('')}</div>
+      </div>`;
+  }).join('');
+
+  // Wake trend
+  renderWakeTrend(year, month, days);
+
+  // Patterns (computed locally)
+  renderPatterns(year, month, days);
+
+  // Thoughts feed for this month
+  renderThoughtsFeed(year, month);
+}
+
+function renderWakeTrend(year, month, days) {
+  const target = timeToMin(state.settings.wakeTarget);
+  const todayDate = new Date();
+  const isCurrentMonth = year === todayDate.getFullYear() && month === todayDate.getMonth();
+  const limit = isCurrentMonth ? todayDate.getDate() : days;
+
+  const points = [];
+  for (let d = 1; d <= limit; d++) {
+    const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const wake = getLog(date).wake;
+    if (wake) points.push({ d, mins: timeToMin(wake) });
+  }
+
+  const W = 600, H = 140, PADL = 36, PADR = 12, PADT = 14, PADB = 22;
+  const minMins = Math.min(target - 30, ...points.map(p => p.mins), target);
+  const maxMins = Math.max(target + 90, ...points.map(p => p.mins), target);
+  const span = Math.max(maxMins - minMins, 60);
+
+  const xFor = d => PADL + (d - 1) / Math.max(days - 1, 1) * (W - PADL - PADR);
+  const yFor = m => PADT + (m - minMins) / span * (H - PADT - PADB);
+
+  // build SVG
+  let svg = '';
+  // Target line
+  const ty = yFor(target);
+  svg += `<line x1="${PADL}" x2="${W-PADR}" y1="${ty}" y2="${ty}" stroke="var(--accent-dim)" stroke-dasharray="3,3" stroke-width="1"/>`;
+  svg += `<text x="${PADL-4}" y="${ty+3}" text-anchor="end" fill="var(--accent-dim)" font-family="DM Mono" font-size="9">${state.settings.wakeTarget}</text>`;
+
+  // Y-axis labels (min/max range)
+  svg += `<text x="${PADL-4}" y="${PADT+3}" text-anchor="end" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${minToTime(minMins)}</text>`;
+  svg += `<text x="${PADL-4}" y="${H-PADB+8}" text-anchor="end" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${minToTime(maxMins)}</text>`;
+
+  // Path
+  if (points.length > 1) {
+    const pathD = points.map((p, i) => `${i===0?'M':'L'}${xFor(p.d).toFixed(1)},${yFor(p.mins).toFixed(1)}`).join(' ');
+    svg += `<path d="${pathD}" stroke="var(--accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  // Points
+  points.forEach(p => {
+    const cx = xFor(p.d), cy = yFor(p.mins);
+    const late = p.mins > target;
+    svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5" fill="${late?'var(--danger)':'var(--health)'}"/>`;
+  });
+
+  // X-axis: day labels every 5 days
+  for (let d = 1; d <= days; d += 5) {
+    const x = xFor(d);
+    svg += `<text x="${x}" y="${H-4}" text-anchor="middle" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${d}</text>`;
+  }
+
+  document.getElementById('wake-svg').innerHTML = svg;
+
+  // Stats
+  const stats = document.getElementById('wake-stats');
+  if (points.length === 0) {
+    stats.innerHTML = `<div class="wake-stat"><div class="wake-stat-val">—</div><div class="wake-stat-lbl">No data yet</div></div>`;
+    return;
+  }
+  const avgMins = Math.round(points.reduce((s,p)=>s+p.mins,0) / points.length);
+  const earlierThanTarget = points.filter(p => p.mins <= target).length;
+  const pctHit = Math.round(earlierThanTarget / points.length * 100);
+  const streakDays = streak('wake');
+
+  stats.innerHTML = `
+    <div class="wake-stat"><div class="wake-stat-val">${minToTime(avgMins)}</div><div class="wake-stat-lbl">Avg wake</div></div>
+    <div class="wake-stat"><div class="wake-stat-val">${pctHit}%</div><div class="wake-stat-lbl">Hit target</div></div>
+    <div class="wake-stat"><div class="wake-stat-val">${streakDays}</div><div class="wake-stat-lbl">Day streak</div></div>
+    <div class="wake-stat"><div class="wake-stat-val">${points.length}</div><div class="wake-stat-lbl">Logged</div></div>
+  `;
+}
+
+function renderPatterns(year, month, days) {
+  // Compute simple local patterns from logs and thoughts.
+  const patterns = [];
+  const todayDate = new Date();
+  const isCurrentMonth = year === todayDate.getFullYear() && month === todayDate.getMonth();
+  const limit = isCurrentMonth ? todayDate.getDate() : days;
+  const elapsed = limit;
+
+  // Habit completion rates
+  state.habits.forEach(h => {
+    if (h.id === 'wake') return;
+    let done = 0;
+    for (let d = 1; d <= limit; d++) {
+      const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (habitIsDone(date, h.id)) done++;
+    }
+    const pct = elapsed > 0 ? Math.round(done/elapsed*100) : 0;
+    if (pct >= 80) patterns.push(`<li><span>${h.name} — strong at ${pct}% of days</span></li>`);
+    else if (pct > 0 && pct < 40) patterns.push(`<li><span>${h.name} — slipping at ${pct}% of days</span></li>`);
+  });
+
+  // Tag frequency in thoughts this month
+  const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
+  const monthThoughts = state.thoughts.filter(t => t.ts.startsWith(monthPrefix));
+  if (monthThoughts.length > 0) {
+    const tagCounts = {};
+    monthThoughts.forEach(t => t.tags.forEach(tag => tagCounts[tag] = (tagCounts[tag]||0)+1));
+    const top = Object.entries(tagCounts).sort((a,b) => b[1]-a[1])[0];
+    if (top) patterns.push(`<li><span>Most-tagged theme: <strong style="color:var(--accent)">${top[0]}</strong> (${top[1]} thoughts)</span></li>`);
+    if (monthThoughts.length < limit * 0.5) {
+      patterns.push(`<li><span>Logged ${monthThoughts.length} thoughts in ${limit} days — capture more to spot patterns</span></li>`);
+    }
+  }
+
+  // Wake drift
+  const wakeTimes = [];
+  for (let d = 1; d <= limit; d++) {
+    const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const w = getLog(date).wake;
+    if (w) wakeTimes.push({d, m: timeToMin(w)});
+  }
+  if (wakeTimes.length >= 5) {
+    const first = wakeTimes.slice(0, Math.ceil(wakeTimes.length/2));
+    const last  = wakeTimes.slice(Math.ceil(wakeTimes.length/2));
+    const avg = arr => arr.reduce((s,x)=>s+x.m,0)/arr.length;
+    const drift = avg(last) - avg(first);
+    if (Math.abs(drift) >= 10) {
+      const dir = drift > 0 ? 'later' : 'earlier';
+      const cls = drift > 0 ? 'var(--danger)' : 'var(--health)';
+      patterns.push(`<li><span>Wake time drifting <strong style="color:${cls}">${Math.abs(Math.round(drift))} min ${dir}</strong> over the month</span></li>`);
+    }
+  }
+
+  const card = document.getElementById('patterns-card');
+  if (patterns.length === 0) {
+    card.classList.add('hidden');
+  } else {
+    card.classList.remove('hidden');
+    document.getElementById('patterns-list').innerHTML = patterns.join('');
+  }
+}
+
+function renderThoughtsFeed(year, month) {
+  const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
+  const monthThoughts = state.thoughts.filter(t => t.ts.startsWith(monthPrefix));
+  document.getElementById('month-thoughts-count').textContent = monthThoughts.length;
+
+  // Tag filter
+  const tagCounts = { all: monthThoughts.length };
+  monthThoughts.forEach(t => t.tags.forEach(tag => tagCounts[tag] = (tagCounts[tag]||0)+1));
+  const tagFilter = document.getElementById('tag-filter');
+  const tags = ['all', ...Object.keys(TAG_KEYWORDS).filter(t => tagCounts[t])];
+  tagFilter.innerHTML = tags.map(t =>
+    `<button data-tag="${t}" class="${activeTag === t ? 'active' : ''}">${t} <span class="count">${tagCounts[t]||0}</span></button>`
+  ).join('');
+  tagFilter.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTag = btn.dataset.tag;
+      renderThoughtsFeed(year, month);
+    });
+  });
+
+  let filtered = monthThoughts;
+  if (activeTag !== 'all') filtered = filtered.filter(t => t.tags.includes(activeTag));
+  filtered = filtered.sort((a,b) => b.ts.localeCompare(a.ts));
+
+  const feed = document.getElementById('thoughts-feed');
+  if (filtered.length === 0) {
+    feed.innerHTML = `<div class="empty-state">No thoughts ${activeTag !== 'all' ? `tagged ${activeTag}` : 'yet this month'}.</div>`;
+    return;
+  }
+  feed.innerHTML = filtered.map(t => {
+    const d = new Date(t.ts);
+    const dateStr = `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const tagsHtml = t.tags.length ? `<div class="fi-tags">${t.tags.map(tag => `<span class="fi-tag">${tag}</span>`).join('')}</div>` : '';
+    return `
+      <div class="feed-item">
+        <div class="fi-meta"><span>${dateStr}</span></div>
+        <div class="fi-text">${escapeHtml(t.text)}</div>
+        ${tagsHtml}
+      </div>`;
+  }).join('');
+}
+
+let activeTag = 'all';
+
+document.getElementById('month-prev').addEventListener('click', () => {
+  currentMonth.setMonth(currentMonth.getMonth() - 1);
+  activeTag = 'all';
+  renderMonth();
+});
+document.getElementById('month-next').addEventListener('click', () => {
+  currentMonth.setMonth(currentMonth.getMonth() + 1);
+  activeTag = 'all';
+  renderMonth();
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SCHEDULE VIEW
+// ════════════════════════════════════════════════════════════════════════════
+function toMin(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+function currentScheduleIdx() {
+  const cm = new Date().getHours() * 60 + new Date().getMinutes();
+  for (let i = 0; i < state.schedule.length; i++) {
+    const item = state.schedule[i];
+    if (!item.end) continue;
+    let s = toMin(item.time), e = toMin(item.end);
+    if (e === 0) e = 1440;
+    if (s > e) e += 1440;
+    let c = cm;
+    if (c < s && s > 1200) c += 1440;
+    if (c >= s && c < e) return i;
+  }
+  return -1;
+}
+
+function renderSchedule() {
+  const now = currentScheduleIdx();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = state.schedule.map((item, i) => {
+    const durHtml = item.dur && item.dur !== '—' ? `<span class="ti-dur">${item.dur}</span>` : '';
+    const noteHtml = item.note ? `<span class="ti-note">· ${item.note}</span>` : '';
+    return `
+      <div class="ti ${i===now?'now':''}" data-cat="${item.cat}">
+        <span class="ti-time">${item.time}</span>
+        <span class="ti-dot"></span>
+        <div class="ti-card">
+          <div class="ti-left">
+            <span class="ti-icon">${item.icon}</span>
+            <span class="ti-name">${item.label}</span>
+            ${durHtml}${noteHtml}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SETTINGS / EXPORT
+// ════════════════════════════════════════════════════════════════════════════
+const wakeTargetInput = document.getElementById('wake-target');
+const sleepTargetInput = document.getElementById('sleep-target');
+
+function renderSettings() {
+  wakeTargetInput.value = state.settings.wakeTarget;
+  sleepTargetInput.value = state.settings.sleepTarget;
+}
+wakeTargetInput.addEventListener('change', () => {
+  state.settings.wakeTarget = wakeTargetInput.value;
+  saveState();
+  toast(`Target wake: ${wakeTargetInput.value}`);
+  renderHabits();
+});
+sleepTargetInput.addEventListener('change', () => {
+  state.settings.sleepTarget = sleepTargetInput.value;
+  saveState();
+});
+
+// Markdown export
+function exportMarkdown() {
+  const now = new Date();
+  let md = `# Rhythm Export\n\n`;
+  md += `Exported: ${isoDate(now)}\n`;
+  md += `Started: ${state.settings.startDate}\n`;
+  md += `Wake target: ${state.settings.wakeTarget} · Sleep target: ${state.settings.sleepTarget}\n\n`;
+
+  // Habits log
+  md += `## Habit Log\n\n`;
+  md += `| Date | Wake | Exercise | Reading | Family | Market/AI |\n`;
+  md += `|---|---|---|---|---|---|\n`;
+  const dates = Object.keys(state.logs).sort();
+  dates.forEach(d => {
+    const l = state.logs[d];
+    const wake = l.wake || '—';
+    const ex = l.exercise?.done ? (l.exercise.minutes ? `✓ ${l.exercise.minutes}m` : '✓') : '·';
+    const rd = l.reading?.done ? (l.reading.minutes ? `✓ ${l.reading.minutes}m` : '✓') : '·';
+    const fm = l.family?.done ? '✓' : '·';
+    const mk = l.market?.done ? (l.market.minutes ? `✓ ${l.market.minutes}m` : '✓') : '·';
+    md += `| ${d} | ${wake} | ${ex} | ${rd} | ${fm} | ${mk} |\n`;
+  });
+
+  // Thoughts
+  md += `\n## Thoughts\n\n`;
+  const grouped = {};
+  state.thoughts.forEach(t => {
+    const d = t.ts.slice(0,10);
+    (grouped[d] = grouped[d] || []).push(t);
+  });
+  Object.keys(grouped).sort().forEach(d => {
+    md += `### ${d}\n\n`;
+    grouped[d].sort((a,b)=>a.ts.localeCompare(b.ts)).forEach(t => {
+      const time = t.ts.slice(11,16);
+      const tags = t.tags.length ? ` _[${t.tags.join(', ')}]_` : '';
+      md += `- **${time}** —${tags} ${t.text}\n`;
+    });
+    md += `\n`;
+  });
+
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rhythm-${isoDate(now)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Markdown exported');
+}
+
+function exportJson() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rhythm-backup-${isoDate(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+}
+
+document.getElementById('export-btn').addEventListener('click', exportMarkdown);
+document.getElementById('export-json-btn').addEventListener('click', exportJson);
+
+document.getElementById('import-btn').addEventListener('click', () => {
+  document.getElementById('import-file').click();
+});
+document.getElementById('import-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('This will REPLACE all current data. Continue?')) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      state = { ...DEFAULT_STATE, ...parsed, settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) } };
+      saveState();
+      renderAll();
+      toast('Backup restored');
+    } catch (err) {
+      toast('Invalid backup file', true);
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('wipe-btn').addEventListener('click', () => {
+  if (!confirm('Wipe ALL data? This cannot be undone.')) return;
+  if (!confirm('Really sure? Last chance.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  state.settings.startDate = today();
+  saveState();
+  renderAll();
+  toast('All data wiped');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const view = btn.dataset.view;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + view).classList.add('active');
+    if (view === 'month') renderMonth();
+    if (view === 'schedule') renderSchedule();
+    if (view === 'settings') renderSettings();
+    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; renderHabits(); renderTodayThoughts(); }
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', isError);
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════════════
+function renderAll() {
+  renderHabits();
+  renderTodayThoughts();
+  renderSchedule();
+  renderSettings();
+}
+renderAll();
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SERVICE WORKER — enables offline + Add to Home Screen
+// ════════════════════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err) => {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+// Capture install prompt for Android — show our own button if browser doesn't auto-prompt
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Optional: surface an Install button somewhere. Keeping it implicit for now —
+  // browsers will show their own install affordance.
+});
+</script>
+</body>
+</html>
