@@ -276,6 +276,37 @@ header {
   color: var(--text-faint);
   margin-top: .15rem;
 }
+.wake-inline-label {
+  font-size: .55rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: .5rem;
+  display: block;
+}
+.wake-inline-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .35rem;
+}
+.wake-inline-input {
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: .4rem .6rem;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 1rem;
+  flex: 1;
+  max-width: 130px;
+}
+.wake-inline-input:focus { outline: none; }
+.wake-inline-btns {
+  display: flex;
+  gap: .35rem;
+  margin-left: auto;
+}
 
 /* ── THOUGHT INPUT ── */
 .thought-card {
@@ -322,7 +353,11 @@ header {
   background: var(--surface2);
   color: var(--text-dim);
   border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
 }
+.thought-tag:hover { border-color: var(--accent-dim); color: var(--text); }
 .thought-tag.detected { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-dim); }
 .thought-save {
   background: var(--accent);
@@ -662,12 +697,12 @@ header {
 /* ── SCHEDULE VIEW ── */
 .timeline {
   position: relative;
-  padding-left: 70px;
+  padding-left: 84px;
 }
 .timeline::before {
   content: '';
   position: absolute;
-  left: 50px;
+  left: 62px;
   top: 12px;
   bottom: 12px;
   width: 1px;
@@ -679,17 +714,18 @@ header {
 }
 .ti-time {
   position: absolute;
-  left: -70px;
+  left: -82px;
   top: 50%;
   transform: translateY(-50%);
-  width: 58px;
+  width: 56px;
   text-align: right;
   font-size: .6rem;
   color: var(--text-dim);
+  padding-right: 2px;
 }
 .ti-dot {
   position: absolute;
-  left: -23px;
+  left: -26px;
   top: 50%;
   transform: translateY(-50%);
   width: 7px;
@@ -730,6 +766,99 @@ header {
 .ti.now .ti-name { color: var(--accent); }
 .ti-dur { font-size: .58rem; color: var(--text-faint); letter-spacing: .05em; margin-left: .25rem; }
 .ti-note { font-size: .6rem; color: var(--text-faint); font-style: italic; margin-left: .35rem; }
+.ti[data-si] { cursor: pointer; }
+.ti[data-si]:hover .ti-card { background: var(--surface); border-color: var(--border2); }
+.ti-tap-hint { font-size: .5rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+.ti.sched-editing .ti-time { top: 1.0rem; transform: none; }
+.ti.sched-editing .ti-dot  { top: 1.25rem; transform: none; }
+.sched-edit-form {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  padding: .75rem;
+  margin-bottom: 2px;
+}
+.sched-edit-row {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .45rem;
+  flex-wrap: wrap;
+}
+.sched-lbl {
+  font-size: .52rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sched-edit-input {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: .3rem .5rem;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: .72rem;
+  min-width: 0;
+}
+.sched-edit-input:focus { outline: none; border-color: var(--accent); }
+.sched-icon-inp  { width: 44px; text-align: center; }
+.sched-label-inp { flex: 1; min-width: 120px; }
+.sched-time-inp  { width: 108px; }
+.sched-cat-sel   { flex: 1; min-width: 80px; }
+.sched-note-inp  { flex: 1; min-width: 100px; }
+.sched-edit-bar  { display: flex; gap: .4rem; margin-top: .5rem; justify-content: flex-end; align-items: center; }
+
+/* ── WEEKEND LOGS ── */
+.weekend-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+  margin-bottom: .6rem;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.weekend-card:hover { border-color: var(--border2); }
+.weekend-card.editing { border-color: var(--accent-dim); cursor: default; }
+.weekend-card-label {
+  font-size: .55rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: .35rem;
+}
+.weekend-card-text {
+  font-family: var(--serif);
+  font-size: .95rem;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--text);
+}
+.weekend-card-empty {
+  font-family: var(--serif);
+  font-size: .9rem;
+  font-style: italic;
+  color: var(--text-faint);
+}
+.weekend-edit-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: .95rem;
+  font-style: italic;
+  line-height: 1.55;
+  padding: .5rem .65rem;
+  border-radius: 5px;
+  resize: none;
+  min-height: 64px;
+}
+.weekend-edit-input:focus { outline: none; border-color: var(--accent); }
 
 /* ── EXPORT / SETTINGS ── */
 .settings-card {
@@ -952,6 +1081,9 @@ header {
   <p class="section-label">Thoughts <span class="label-meta" id="month-thoughts-count">0</span></p>
   <div class="tag-filter" id="tag-filter"></div>
   <div class="thoughts-feed" id="thoughts-feed"></div>
+
+  <p class="section-label" style="margin-top:1.5rem">Weekends</p>
+  <div id="weekends-section"></div>
 </section>
 
 <!-- ─── SCHEDULE VIEW ─── -->
@@ -959,11 +1091,7 @@ header {
   <p class="section-label">Weekday Rhythm</p>
   <div class="timeline" id="timeline"></div>
   <p class="section-label" style="margin-top:1.5rem">Weekend Mode</p>
-  <div class="settings-card" style="margin-bottom:0">
-    <p style="font-size:.78rem; color:var(--text-dim); line-height:1.6; font-style:italic; font-family:var(--serif); font-size:.95rem">
-      Longer meditation · personal project block (2 hrs) · family time in afternoon · reading wind-down preserved.
-    </p>
-  </div>
+  <div id="weekend-mode-card"></div>
 </section>
 
 <!-- ─── SETTINGS / MORE ─── -->
@@ -1001,6 +1129,12 @@ header {
   <p class="section-label">Danger Zone</p>
   <div class="settings-card">
     <p style="font-size:.7rem; color:var(--text-dim); line-height:1.5; margin-bottom:.65rem">
+      Reset schedule blocks back to the built-in defaults. Your schedule edits will be lost.
+    </p>
+    <button class="btn btn-danger" id="reset-schedule-btn">Reset Schedule to Defaults</button>
+  </div>
+  <div class="settings-card">
+    <p style="font-size:.7rem; color:var(--text-dim); line-height:1.5; margin-bottom:.65rem">
       Wipe all habits, thoughts, and settings. Cannot be undone.
     </p>
     <button class="btn btn-danger" id="wipe-btn">Wipe All Data</button>
@@ -1031,18 +1165,17 @@ const DEFAULT_HABITS = [
 ];
 
 const DEFAULT_SCHEDULE = [
-  { time:"06:30", end:"07:00", label:"Wake & freshen",    icon:"☀️", cat:"health",   dur:"30 min" },
-  { time:"07:00", end:"07:15", label:"Meditation",        icon:"🧘", cat:"mind",     dur:"15 min" },
-  { time:"07:15", end:"08:15", label:"Exercise",          icon:"🏋️", cat:"health",   dur:"60 min" },
-  { time:"08:15", end:"08:45", label:"Shower & breakfast",icon:"🍳", cat:"health",   dur:"30 min" },
-  { time:"08:45", end:"10:00", label:"Reading / Learning",icon:"📖", cat:"mind",     dur:"75 min", note:"market + AI" },
-  { time:"10:00", end:"12:30", label:"Focus Block",       icon:"⚡", cat:"focus",    dur:"2.5 hr", note:"no meetings" },
-  { time:"12:30", end:"13:15", label:"Lunch",             icon:"🍱", cat:"health",   dur:"45 min" },
-  { time:"13:15", end:"19:00", label:"Work Block",        icon:"💼", cat:"work",     dur:"5.75 hr", note:"meetings · async" },
-  { time:"19:00", end:"20:30", label:"Family Time",       icon:"👨‍👩‍👧", cat:"personal", dur:"90 min" },
-  { time:"20:30", end:"21:15", label:"Dinner",            icon:"🍽️", cat:"health",   dur:"45 min" },
-  { time:"21:15", end:"22:30", label:"Wind-down · Read",  icon:"📚", cat:"mind",     dur:"75 min" },
-  { time:"22:30", end:null,    label:"Sleep",             icon:"💤", cat:"health",   dur:"—" }
+  { time:"08:00", end:"08:30", label:"Wake & freshen",    icon:"☀️", cat:"health",   dur:"30 min" },
+  { time:"08:30", end:"08:45", label:"Meditation",        icon:"🧘", cat:"mind",     dur:"15 min" },
+  { time:"08:45", end:"09:30", label:"Exercise",          icon:"🏋️", cat:"health",   dur:"45 min" },
+  { time:"09:30", end:"10:00", label:"Shower & breakfast",icon:"🍳", cat:"health",   dur:"30 min" },
+  { time:"10:00", end:"12:00", label:"Reading / Learning",icon:"📖", cat:"mind",     dur:"2 hr",   note:"market + AI" },
+  { time:"12:00", end:"21:00", label:"Work Block",        icon:"💼", cat:"work",     dur:"9 hr",   note:"meetings · async" },
+  { time:"15:00", end:"15:45", label:"Lunch",             icon:"🍱", cat:"health",   dur:"45 min" },
+  { time:"21:00", end:"21:30", label:"Family Time",       icon:"👨‍👩‍👧", cat:"personal", dur:"30 min" },
+  { time:"21:30", end:"22:15", label:"Dinner",            icon:"🍽️", cat:"health",   dur:"45 min" },
+  { time:"22:15", end:"23:00", label:"Wind-down · Read",  icon:"📚", cat:"mind",     dur:"45 min" },
+  { time:"23:00", end:null,    label:"Sleep",             icon:"💤", cat:"health",   dur:"—" }
 ];
 
 const TAG_KEYWORDS = {
@@ -1063,9 +1196,11 @@ const DEFAULT_STATE = {
   // logs[date] = { wake: "06:42", exercise: { done:true, minutes:45 }, reading: {...}, ... }
   logs: {},
   thoughts: [], // { id, ts, text, tags: [] }
+  weekendLogs: {}, // keyed by Saturday date 'YYYY-MM-DD' → { text, ts }
   settings: {
     wakeTarget: '06:30',
     sleepTarget: '23:00',
+    weekendMode: 'Longer meditation · personal project block (2 hrs) · family time in afternoon · reading wind-down preserved.',
     startDate: null  // first day app used
   }
 };
@@ -1077,6 +1212,11 @@ if (!state.settings.startDate) {
 }
 
 let currentMonth = new Date(); // for month view navigation
+let wakeEditing = false;
+let editingScheduleIdx = null;
+let schedDeleteArmed = false;
+let weekendModeEditing = false;
+let editingWeekend = null; // Saturday ISO date key
 
 // ════════════════════════════════════════════════════════════════════════════
 //  PERSISTENCE
@@ -1214,6 +1354,33 @@ function renderHabits() {
     if (h.id === 'wake') {
       const actual = log.wake;
       const target = state.settings.wakeTarget;
+
+      if (wakeEditing) {
+        const inputDefault = actual || target;
+        const clearBtn = actual
+          ? `<button type="button" class="rt-btn danger" id="wake-clear" data-stop="1">Clear</button>`
+          : '';
+        return `
+          <div class="habit-card wake-card ${actual ? 'done' : ''}" data-habit="wake">
+            <div class="h-top" style="flex-direction:column;align-items:stretch">
+              <div class="h-name">${h.name}</div>
+              <span class="wake-inline-label">what time did you actually wake up?</span>
+              <div class="wake-inline-row" data-stop="1">
+                <input type="time" id="wake-time-input" class="wake-inline-input" value="${inputDefault}">
+                <div class="wake-inline-btns">
+                  ${clearBtn}
+                  <button type="button" class="rt-btn" id="wake-cancel" data-stop="1">Cancel</button>
+                  <button type="button" class="rt-btn primary" id="wake-log" data-stop="1">Log</button>
+                </div>
+              </div>
+            </div>
+            <div class="h-meta">
+              <span>target ${target}</span>
+              ${streakHtml}
+            </div>
+          </div>`;
+      }
+
       let display, deltaClass = '', deltaText = '';
       if (actual) {
         display = `<span class="wake-actual">${actual}</span><span class="wake-vs">vs ${target}</span>`;
@@ -1277,33 +1444,56 @@ function renderHabits() {
       setHabitLog(today(), id, log[id]);
     });
   });
+
+  // Wake inline picker buttons
+  const wakeLogBtn = document.getElementById('wake-log');
+  const wakeCancelBtn = document.getElementById('wake-cancel');
+  const wakeClearBtn = document.getElementById('wake-clear');
+  if (wakeLogBtn) {
+    wakeLogBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const inp = document.getElementById('wake-time-input');
+      const val = inp ? inp.value : '';
+      if (val && /^\d{2}:\d{2}$/.test(val)) {
+        setHabitLog(today(), 'wake', val);
+        toast(`Woke at ${val}`);
+      }
+      wakeEditing = false;
+      renderHabits();
+    });
+  }
+  if (wakeCancelBtn) {
+    wakeCancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wakeEditing = false;
+      renderHabits();
+    });
+  }
+  if (wakeClearBtn) {
+    wakeClearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const d = today();
+      if (state.logs[d]) delete state.logs[d].wake;
+      saveState();
+      wakeEditing = false;
+      toast('Wake cleared');
+      renderHabits();
+    });
+  }
 }
 
 function onHabitTap(habitId) {
   const date = today();
   const log = getLog(date);
   if (habitId === 'wake') {
-    // Tap-to-log: confirm "now" or let them pick
-    const now = new Date();
-    const cur = log.wake;
-    if (cur) {
-      // Allow re-prompting with manual entry
-      const ans = prompt(`Wake time logged at ${cur}. Update to:`, cur);
-      if (ans && /^\d{2}:\d{2}$/.test(ans)) {
-        setHabitLog(date, 'wake', ans);
-        toast(`Wake updated to ${ans}`);
-      } else if (ans === '') {
-        delete state.logs[date].wake; saveState();
-        toast('Wake cleared');
-      }
-    } else {
-      const nowStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-      const ans = prompt(`Log wake time. Press OK for now (${nowStr}), or type HH:MM`, nowStr);
-      if (ans === null) return;
-      const final = /^\d{2}:\d{2}$/.test(ans) ? ans : nowStr;
-      setHabitLog(date, 'wake', final);
-      toast(`Woke at ${final}`);
-    }
+    wakeEditing = true;
+    renderHabits();
+    // Focus the time input after render so mobile opens the native picker
+    setTimeout(() => {
+      const inp = document.getElementById('wake-time-input');
+      if (inp) inp.focus();
+    }, 50);
+    return;
   } else {
     const cur = log[habitId] || {};
     const newDone = !cur.done;
@@ -1320,14 +1510,28 @@ const thoughtInput = document.getElementById('thought-input');
 const thoughtSave  = document.getElementById('thought-save');
 const thoughtTags  = document.getElementById('thought-tags');
 
+let manualTags = new Set();
+
 function updateThoughtTags() {
   const text = thoughtInput.value.trim();
   thoughtSave.disabled = text.length === 0;
   const detected = detectTags(text);
   const allTags = Object.keys(TAG_KEYWORDS);
-  thoughtTags.innerHTML = allTags.map(t =>
-    `<span class="thought-tag ${detected.includes(t) ? 'detected' : ''}">${t}</span>`
-  ).join('');
+  thoughtTags.innerHTML = allTags.map(t => {
+    const isActive = detected.includes(t) || manualTags.has(t);
+    return `<span class="thought-tag ${isActive ? 'detected' : ''}" data-tag="${t}">${t}</span>`;
+  }).join('');
+  thoughtTags.querySelectorAll('.thought-tag').forEach(span => {
+    span.addEventListener('click', () => {
+      const tag = span.dataset.tag;
+      if (manualTags.has(tag)) {
+        manualTags.delete(tag);
+      } else {
+        manualTags.add(tag);
+      }
+      updateThoughtTags();
+    });
+  });
 }
 
 thoughtInput.addEventListener('input', () => {
@@ -1339,7 +1543,7 @@ thoughtInput.addEventListener('input', () => {
 thoughtSave.addEventListener('click', () => {
   const text = thoughtInput.value.trim();
   if (!text) return;
-  const tags = detectTags(text);
+  const tags = [...new Set([...detectTags(text), ...manualTags])];
   state.thoughts.push({
     id: 't_' + Date.now(),
     ts: new Date().toISOString(),
@@ -1349,6 +1553,7 @@ thoughtSave.addEventListener('click', () => {
   saveState();
   thoughtInput.value = '';
   thoughtInput.style.height = 'auto';
+  manualTags.clear();
   updateThoughtTags();
   renderTodayThoughts();
   toast('Thought saved');
@@ -1529,6 +1734,9 @@ function renderMonth() {
 
   // Thoughts feed for this month
   renderThoughtsFeed(year, month);
+
+  // Weekend logs for this month
+  renderWeekendsSection(year, month);
 }
 
 function renderWakeTrend(year, month, days) {
@@ -1741,11 +1949,47 @@ function currentScheduleIdx() {
 function renderSchedule() {
   const now = currentScheduleIdx();
   const tl = document.getElementById('timeline');
+  const cats = ['health','mind','focus','work','personal'];
+
   tl.innerHTML = state.schedule.map((item, i) => {
+    if (editingScheduleIdx === i) {
+      const armed = schedDeleteArmed;
+      return `
+        <div class="ti sched-editing" data-cat="${item.cat}">
+          <span class="ti-time">${item.time}</span>
+          <span class="ti-dot"></span>
+          <div class="sched-edit-form">
+            <div class="sched-edit-row">
+              <input type="text" class="sched-edit-input sched-icon-inp" id="se-icon" value="${escapeHtml(item.icon)}" placeholder="emoji" maxlength="4">
+              <input type="text" class="sched-edit-input sched-label-inp" id="se-label" value="${escapeHtml(item.label)}" placeholder="Block name">
+            </div>
+            <div class="sched-edit-row">
+              <span class="sched-lbl">Start</span>
+              <input type="time" class="sched-edit-input sched-time-inp" id="se-time" value="${item.time}">
+              <span class="sched-lbl">End</span>
+              <input type="time" class="sched-edit-input sched-time-inp" id="se-end" value="${item.end || ''}">
+              <span class="sched-lbl">Cat</span>
+              <select class="sched-edit-input sched-cat-sel" id="se-cat">
+                ${cats.map(c => `<option value="${c}"${item.cat===c?' selected':''}>${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="sched-edit-row">
+              <span class="sched-lbl">Note</span>
+              <input type="text" class="sched-edit-input sched-note-inp" id="se-note" value="${escapeHtml(item.note||'')}" placeholder="optional">
+            </div>
+            <div class="sched-edit-bar">
+              <button type="button" class="rt-btn danger${armed?' armed':''}" data-sa="delete">${armed?'Confirm delete':'Delete'}</button>
+              <button type="button" class="rt-btn" data-sa="cancel">Cancel</button>
+              <button type="button" class="rt-btn primary" data-sa="save">Save</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
     const durHtml = item.dur && item.dur !== '—' ? `<span class="ti-dur">${item.dur}</span>` : '';
     const noteHtml = item.note ? `<span class="ti-note">· ${item.note}</span>` : '';
     return `
-      <div class="ti ${i===now?'now':''}" data-cat="${item.cat}">
+      <div class="ti ${i===now?'now':''}" data-cat="${item.cat}" data-si="${i}">
         <span class="ti-time">${item.time}</span>
         <span class="ti-dot"></span>
         <div class="ti-card">
@@ -1754,9 +1998,211 @@ function renderSchedule() {
             <span class="ti-name">${item.label}</span>
             ${durHtml}${noteHtml}
           </div>
+          <span class="ti-tap-hint">edit</span>
         </div>
       </div>`;
   }).join('');
+
+  tl.insertAdjacentHTML('beforeend',
+    `<div style="padding-top:.9rem"><button type="button" class="rt-btn" id="sched-add">+ Add block</button></div>`
+  );
+
+  // Tap row → open edit form
+  tl.querySelectorAll('[data-si]').forEach(el => {
+    el.addEventListener('click', () => {
+      editingScheduleIdx = parseInt(el.dataset.si);
+      schedDeleteArmed = false;
+      renderSchedule();
+    });
+  });
+
+  // Edit form actions
+  tl.querySelectorAll('[data-sa]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const action = btn.dataset.sa;
+      const idx = editingScheduleIdx;
+
+      if (action === 'cancel') {
+        editingScheduleIdx = null;
+        schedDeleteArmed = false;
+        renderSchedule();
+      } else if (action === 'save') {
+        const icon  = document.getElementById('se-icon').value.trim() || '●';
+        const label = document.getElementById('se-label').value.trim();
+        if (!label) { toast('Block name is required', true); return; }
+        const time  = document.getElementById('se-time').value;
+        const end   = document.getElementById('se-end').value || null;
+        const cat   = document.getElementById('se-cat').value;
+        const note  = document.getElementById('se-note').value.trim() || undefined;
+        // Auto-compute duration from start/end when both are set
+        let dur = state.schedule[idx].dur || '—';
+        if (time && end) {
+          const diff = timeToMin(end) - timeToMin(time);
+          if (diff > 0) {
+            if (diff < 60) dur = `${diff} min`;
+            else if (diff % 60 === 0) dur = `${diff/60} hr`;
+            else dur = `${Math.floor(diff/60)} hr ${diff%60} min`;
+          }
+        }
+        state.schedule[idx] = { time, end, label, icon, cat, dur, ...(note ? {note} : {}) };
+        saveState();
+        editingScheduleIdx = null;
+        schedDeleteArmed = false;
+        renderSchedule();
+        toast('Block saved');
+      } else if (action === 'delete') {
+        if (!schedDeleteArmed) {
+          schedDeleteArmed = true;
+          renderSchedule();
+          setTimeout(() => {
+            if (schedDeleteArmed) { schedDeleteArmed = false; if (editingScheduleIdx === idx) renderSchedule(); }
+          }, 4000);
+          return;
+        }
+        state.schedule.splice(idx, 1);
+        saveState();
+        editingScheduleIdx = null;
+        schedDeleteArmed = false;
+        renderSchedule();
+        toast('Block deleted');
+      }
+    });
+  });
+
+  // Add new block
+  document.getElementById('sched-add')?.addEventListener('click', () => {
+    state.schedule.push({ time: '12:00', end: null, label: 'New Block', icon: '●', cat: 'work', dur: '—' });
+    saveState();
+    editingScheduleIdx = state.schedule.length - 1;
+    schedDeleteArmed = false;
+    renderSchedule();
+  });
+
+  renderWeekendMode();
+}
+
+function renderWeekendMode() {
+  const card = document.getElementById('weekend-mode-card');
+  if (!card) return;
+  const text = state.settings.weekendMode || '';
+  if (weekendModeEditing) {
+    card.innerHTML = `
+      <div class="settings-card" style="margin-bottom:0">
+        <textarea class="weekend-edit-input" id="wm-input" rows="4">${escapeHtml(text)}</textarea>
+        <div class="rt-edit-bar" style="margin-top:.65rem">
+          <button type="button" class="rt-btn" id="wm-cancel">Cancel</button>
+          <button type="button" class="rt-btn primary" id="wm-save">Save</button>
+        </div>
+      </div>`;
+    const inp = document.getElementById('wm-input');
+    if (inp) { autoGrow(inp); inp.focus(); inp.addEventListener('input', () => autoGrow(inp)); }
+    document.getElementById('wm-cancel').addEventListener('click', () => { weekendModeEditing = false; renderWeekendMode(); });
+    document.getElementById('wm-save').addEventListener('click', () => {
+      state.settings.weekendMode = document.getElementById('wm-input').value.trim();
+      saveState();
+      weekendModeEditing = false;
+      renderWeekendMode();
+      toast('Weekend mode saved');
+    });
+  } else {
+    card.innerHTML = `
+      <div class="settings-card" style="margin-bottom:0; cursor:pointer" id="wm-view">
+        <p style="font-family:var(--serif); font-size:.95rem; color:var(--text-dim); line-height:1.6; font-style:italic">
+          ${text ? escapeHtml(text) : '<span style="color:var(--text-faint)">Tap to describe your weekend rhythm…</span>'}
+        </p>
+        <span style="display:block; margin-top:.45rem; font-size:.5rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint)">tap to edit</span>
+      </div>`;
+    document.getElementById('wm-view').addEventListener('click', () => { weekendModeEditing = true; renderWeekendMode(); });
+  }
+}
+
+// ── Weekend logs helpers ──
+function getWeekendsInMonth(year, month) {
+  const result = [];
+  const days = daysInMonth(year, month);
+  for (let d = 1; d <= days; d++) {
+    if (new Date(year, month, d).getDay() === 6) { // Saturday
+      const satStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const sunDate = new Date(year, month, d + 1);
+      const sunStr = isoDate(sunDate);
+      result.push({ satStr, sunStr, satDay: d, sunDate });
+    }
+  }
+  return result;
+}
+
+function renderWeekendsSection(year, month) {
+  const container = document.getElementById('weekends-section');
+  if (!container) return;
+  const weekends = getWeekendsInMonth(year, month);
+  if (weekends.length === 0) {
+    container.innerHTML = `<div class="empty-state">No weekends this month.</div>`;
+    return;
+  }
+
+  container.innerHTML = weekends.map(({ satStr, sunStr, satDay, sunDate }) => {
+    const log = state.weekendLogs[satStr];
+    const satMon = MONTHS[parseInt(satStr.slice(5,7))-1].slice(0,3);
+    const satD = parseInt(satStr.slice(8));
+    const sunMon = MONTHS[sunDate.getMonth()].slice(0,3);
+    const sunD = sunDate.getDate();
+    const sameMon = sunDate.getMonth() === month;
+    const rangeLabel = `${satMon} ${satD} – ${sameMon ? '' : sunMon + ' '}${sunD}`;
+
+    if (editingWeekend === satStr) {
+      return `
+        <div class="weekend-card editing" data-wksat="${satStr}">
+          <div class="weekend-card-label">${rangeLabel}</div>
+          <textarea class="weekend-edit-input" id="wk-inp-${satStr}" rows="3" placeholder="How was your weekend?">${escapeHtml(log ? log.text : '')}</textarea>
+          <div class="rt-edit-bar" style="margin-top:.5rem">
+            <button type="button" class="rt-btn" data-wka="cancel">Cancel</button>
+            <button type="button" class="rt-btn primary" data-wka="save" data-wksat="${satStr}">Save</button>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="weekend-card" data-wksat="${satStr}">
+        <div class="weekend-card-label">${rangeLabel}</div>
+        ${log && log.text
+          ? `<div class="weekend-card-text">${escapeHtml(log.text)}</div>`
+          : `<div class="weekend-card-empty">Tap to add notes…</div>`}
+      </div>`;
+  }).join('');
+
+  // Tap to open edit
+  container.querySelectorAll('.weekend-card:not(.editing)').forEach(card => {
+    card.addEventListener('click', () => {
+      editingWeekend = card.dataset.wksat;
+      renderWeekendsSection(year, month);
+      setTimeout(() => {
+        const inp = document.getElementById(`wk-inp-${editingWeekend}`);
+        if (inp) { inp.focus(); autoGrow(inp); inp.addEventListener('input', () => autoGrow(inp)); }
+      }, 50);
+    });
+  });
+
+  // Save / Cancel
+  container.querySelectorAll('[data-wka]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const action = btn.dataset.wka;
+      const key = editingWeekend;
+      if (action === 'cancel') {
+        editingWeekend = null;
+        renderWeekendsSection(year, month);
+      } else if (action === 'save') {
+        const inp = document.getElementById(`wk-inp-${key}`);
+        const text = inp ? inp.value.trim() : '';
+        if (text) state.weekendLogs[key] = { text, ts: new Date().toISOString() };
+        else delete state.weekendLogs[key];
+        saveState();
+        editingWeekend = null;
+        renderWeekendsSection(year, month);
+        toast('Weekend note saved');
+      }
+    });
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1866,6 +2312,13 @@ document.getElementById('import-file').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
+document.getElementById('reset-schedule-btn').addEventListener('click', () => {
+  if (!confirm('Reset schedule to defaults? Your customisations will be lost.')) return;
+  state.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+  saveState();
+  toast('Schedule reset to defaults');
+});
+
 document.getElementById('wipe-btn').addEventListener('click', () => {
   if (!confirm('Wipe ALL data? This cannot be undone.')) return;
   if (!confirm('Really sure? Last chance.')) return;
@@ -1887,10 +2340,10 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + view).classList.add('active');
-    if (view === 'month') renderMonth();
-    if (view === 'schedule') renderSchedule();
+    if (view === 'month') { editingWeekend = null; renderMonth(); }
+    if (view === 'schedule') { editingScheduleIdx = null; schedDeleteArmed = false; weekendModeEditing = false; renderSchedule(); }
     if (view === 'settings') renderSettings();
-    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; renderHabits(); renderTodayThoughts(); }
+    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; wakeEditing = false; renderHabits(); renderTodayThoughts(); }
     window.scrollTo({top: 0, behavior: 'smooth'});
   });
 });
