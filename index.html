@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -306,6 +306,30 @@ header {
   display: flex;
   gap: .35rem;
   margin-left: auto;
+}
+.sleep-split {
+  display: flex;
+  gap: .6rem;
+  margin-top: .5rem;
+}
+.sleep-half {
+  flex: 1;
+  padding: .5rem .6rem;
+  background: var(--surface2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s;
+  min-width: 0;
+}
+.sleep-half:hover { background: var(--surface3); }
+.sleep-half.editing { flex: 2; }
+.sleep-half-label {
+  font-size: .55rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: .25rem;
 }
 
 /* ── THOUGHT INPUT ── */
@@ -651,6 +675,16 @@ header {
   border-radius: 12px;
   padding: .25rem 1rem;
 }
+.month-thought-group { margin-bottom: .5rem; }
+.month-thought-date {
+  font-size: .58rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: .6rem 0 .2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: .1rem;
+}
 .feed-item {
   padding: .9rem 0;
   border-bottom: 1px solid var(--border);
@@ -768,7 +802,21 @@ header {
 .ti-note { font-size: .6rem; color: var(--text-faint); font-style: italic; margin-left: .35rem; }
 .ti[data-si] { cursor: pointer; }
 .ti[data-si]:hover .ti-card { background: var(--surface); border-color: var(--border2); }
-.ti-tap-hint { font-size: .5rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+.ti-tap-hint { font-size: .5rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); opacity: 0; transition: opacity .15s; }
+.ti:hover .ti-tap-hint, .ti:focus-within .ti-tap-hint { opacity: 1; }
+
+/* category left border on cards */
+.ti[data-cat="health"]   .ti-card { border-left: 2px solid var(--health);   }
+.ti[data-cat="mind"]     .ti-card { border-left: 2px solid var(--mind);     }
+.ti[data-cat="focus"]    .ti-card { border-left: 2px solid var(--focus);    }
+.ti[data-cat="work"]     .ti-card { border-left: 2px solid var(--work);     }
+.ti[data-cat="personal"] .ti-card { border-left: 2px solid var(--personal); }
+
+/* past blocks — already happened */
+.ti.past { opacity: .42; }
+
+/* now block left border glow */
+.ti.now .ti-card { border-left: 2px solid var(--accent); box-shadow: -2px 0 8px rgba(201,149,106,.25); }
 .ti.sched-editing .ti-time { top: 1.0rem; transform: none; }
 .ti.sched-editing .ti-dot  { top: 1.25rem; transform: none; }
 .sched-edit-form {
@@ -1002,6 +1050,77 @@ header {
 }
 
 .hidden { display: none !important; }
+
+/* ── HABIT MANAGER ── */
+.habit-mgr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+.habit-mgr-row:last-child { border-bottom: none; }
+.habit-mgr-name {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+.habit-mgr-meta {
+  font-size: .55rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: .1rem;
+}
+.habit-mgr-remove {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-faint);
+  font-size: .65rem;
+  padding: .25rem .5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--mono);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.habit-mgr-remove:hover { border-color: var(--danger); color: var(--danger); }
+.habit-mgr-remove.armed { background: var(--danger); border-color: var(--danger); color: var(--bg); }
+.habit-add-form {
+  display: flex;
+  gap: .5rem;
+  margin-top: .75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.habit-add-inp {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: .4rem .6rem;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: .75rem;
+  flex: 1;
+  min-width: 120px;
+}
+.habit-add-inp:focus { outline: none; border-color: var(--accent); }
+.habit-add-sel {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: .4rem .5rem;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: .72rem;
+}
+.habit-inherited-note {
+  font-size: .62rem;
+  color: var(--text-faint);
+  font-style: italic;
+  margin-bottom: .55rem;
+  letter-spacing: .04em;
+}
 </style>
 </head>
 <body>
@@ -1067,10 +1186,10 @@ header {
   <p class="section-label">Habits — 1% Each Day</p>
   <div class="heatmap" id="heatmap"></div>
 
-  <p class="section-label">Wake Time vs Target</p>
+  <p class="section-label">Sleep <span class="label-meta"><span style="color:var(--accent)">● wake</span> &nbsp;<span style="color:var(--mind)">● wind-down</span></span></p>
   <div class="wake-trend">
-    <svg class="wake-trend-svg" id="wake-svg" viewBox="0 0 600 140" preserveAspectRatio="none"></svg>
-    <div class="wake-stats" id="wake-stats"></div>
+    <svg class="wake-trend-svg" id="sleep-svg" viewBox="0 0 600 180" preserveAspectRatio="none" style="height:180px"></svg>
+    <div class="wake-stats" id="sleep-stats"></div>
   </div>
 
   <div class="patterns-card hidden" id="patterns-card">
@@ -1078,12 +1197,8 @@ header {
     <ul class="patterns-list" id="patterns-list"></ul>
   </div>
 
-  <p class="section-label">Thoughts <span class="label-meta" id="month-thoughts-count">0</span></p>
-  <div class="tag-filter" id="tag-filter"></div>
-  <div class="thoughts-feed" id="thoughts-feed"></div>
-
-  <p class="section-label" style="margin-top:1.5rem">Weekends</p>
-  <div id="weekends-section"></div>
+  <p class="section-label" style="margin-top:1.5rem">Thoughts</p>
+  <div id="month-thoughts"></div>
 </section>
 
 <!-- ─── SCHEDULE VIEW ─── -->
@@ -1096,6 +1211,9 @@ header {
 
 <!-- ─── SETTINGS / MORE ─── -->
 <section class="view" id="view-settings">
+  <p class="section-label">Habits <span class="label-meta" id="habits-mgr-month"></span></p>
+  <div class="settings-card" id="habits-mgr-card"></div>
+
   <p class="section-label">Targets</p>
   <div class="settings-card">
     <div class="settings-row">
@@ -1157,11 +1275,12 @@ header {
 const STORAGE_KEY = 'rhythm_v1';
 
 const DEFAULT_HABITS = [
-  { id: 'wake',    name: 'Wake Time',     type: 'time',   targetKey: 'wakeTarget' },
-  { id: 'exercise',name: 'Exercise',      type: 'binary', input: 'minutes' },
-  { id: 'reading', name: 'Reading',       type: 'binary', input: 'minutes' },
-  { id: 'family',  name: 'Family Time',   type: 'binary' },
-  { id: 'market',  name: 'Market / AI',   type: 'binary', input: 'minutes' }
+  { id: 'wake',     name: 'Wake Time',   type: 'time',   targetKey: 'wakeTarget' },
+  { id: 'exercise', name: 'Exercise',    type: 'binary', input: 'minutes' },
+  { id: 'reading',  name: 'Reading',     type: 'binary', input: 'minutes' },
+  { id: 'family',   name: 'Family Time', type: 'binary' },
+  { id: 'market',   name: 'Market / AI', type: 'binary', input: 'minutes' },
+  { id: 'winddown', name: 'Wind-down',   type: 'time',   targetKey: 'sleepTarget' }
 ];
 
 const DEFAULT_SCHEDULE = [
@@ -1190,7 +1309,8 @@ const TAG_KEYWORDS = {
 };
 
 const DEFAULT_STATE = {
-  habits: DEFAULT_HABITS,
+  habits: DEFAULT_HABITS,   // kept for migration only
+  habitSets: {},            // { 'YYYY-MM': [ habitObj, ... ] }
   schedule: DEFAULT_SCHEDULE,
   // Daily logs keyed by YYYY-MM-DD
   // logs[date] = { wake: "06:42", exercise: { done:true, minutes:45 }, reading: {...}, ... }
@@ -1206,6 +1326,9 @@ const DEFAULT_STATE = {
 };
 
 let state = loadState();
+migrateHabitSets();
+migrateAddWinddown();
+migrateFromMdExport();
 if (!state.settings.startDate) {
   state.settings.startDate = isoDate(new Date());
   saveState();
@@ -1213,6 +1336,7 @@ if (!state.settings.startDate) {
 
 let currentMonth = new Date(); // for month view navigation
 let wakeEditing = false;
+let winddownEditing = false;
 let editingScheduleIdx = null;
 let schedDeleteArmed = false;
 let weekendModeEditing = false;
@@ -1243,6 +1367,118 @@ function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     toast('Storage error — data may not persist', true);
+  }
+}
+
+function migrateHabitSets() {
+  if (!state.habitSets) state.habitSets = {};
+  if (Object.keys(state.habitSets).length > 0) return;
+  const source = (state.habits && state.habits.length) ? state.habits : DEFAULT_HABITS;
+  const start = state.settings.startDate ? new Date(state.settings.startDate) : new Date();
+  const end = new Date();
+  let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  while (cur <= end) {
+    const key = cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0');
+    state.habitSets[key] = JSON.parse(JSON.stringify(source));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  saveState();
+}
+
+function migrateAddWinddown() {
+  if (!state.habitSets) return;
+  const wd = { id: 'winddown', name: 'Wind-down', type: 'time', targetKey: 'sleepTarget' };
+  let changed = false;
+  Object.keys(state.habitSets).forEach(key => {
+    if (!state.habitSets[key].find(h => h.id === 'winddown')) {
+      state.habitSets[key].push(wd);
+      changed = true;
+    }
+  });
+  if (changed) saveState();
+}
+
+function migrateFromMdExport() {
+  if (state.settings.mdImportDone) return;
+
+  // Set startDate to the earliest known date
+  if (!state.settings.startDate || state.settings.startDate > '2026-05-28') {
+    state.settings.startDate = '2026-05-28';
+  }
+
+  // Set original targets from the export
+  state.settings.wakeTarget  = state.settings.wakeTarget  || '08:30';
+  state.settings.sleepTarget = state.settings.sleepTarget || '23:30';
+
+  // Seed May 2026 habit set (without winddown — migrateAddWinddown will add it)
+  if (!state.habitSets['2026-05']) {
+    state.habitSets['2026-05'] = [
+      { id: 'wake',     name: 'Wake Time',   type: 'time',   targetKey: 'wakeTarget' },
+      { id: 'exercise', name: 'Exercise',    type: 'binary', input: 'minutes' },
+      { id: 'reading',  name: 'Reading',     type: 'binary', input: 'minutes' },
+      { id: 'family',   name: 'Family Time', type: 'binary' },
+      { id: 'market',   name: 'Market / AI', type: 'binary', input: 'minutes' },
+    ];
+  }
+
+  // Habit log entries from export
+  const exportLogs = {
+    '2026-05-28': { wake: '09:00', family: { done: true } },
+    '2026-05-29': { wake: '08:45', exercise: { done: true, minutes: 60 } },
+    '2026-05-30': { wake: '09:45' },
+    '2026-05-31': { wake: '08:30', reading: { done: true, minutes: 60 } },
+    '2026-06-09': { wake: '09:00' },
+    '2026-06-13': { wake: '08:40' },
+  };
+  Object.entries(exportLogs).forEach(([date, log]) => {
+    if (!state.logs[date]) state.logs[date] = {};
+    Object.assign(state.logs[date], log);
+  });
+
+  // Thoughts from export — only add if timestamp not already present
+  const exportThoughts = [
+    { id: 'md-t1', ts: '2026-05-28T17:58:00', text: 'Getting more structured with my tasks. How to be more focused with task at hand without distractions.', tags: [] },
+    { id: 'md-t2', ts: '2026-05-29T05:19:00', text: "More focused in the work i do. Don't rush to answer a ping, protect morning hours", tags: ['work'] },
+    { id: 'md-t3', ts: '2026-05-29T06:44:00', text: 'Set focus hours before any task so that i end up doing that only', tags: [] },
+    { id: 'md-t4', ts: '2026-05-31T06:16:00', text: "Don't drink coffee, not good for my gut. Drank one at airport.", tags: ['ai'] },
+    { id: 'md-t5', ts: '2026-06-13T03:30:00', text: 'the app should be dynamic on what i want to do, to do list etc', tags: ['reflect'] },
+    { id: 'md-t6', ts: '2026-06-13T03:32:00', text: 'Weekend spending time with family.\nIt should not look like i am just working.\nSome weekends i need to be totally disconnected from work.', tags: ['work', 'family', 'reflect'] },
+    { id: 'md-t7', ts: '2026-06-13T03:33:00', text: 'Also need to change the items above, i should pick and choose what really i want to track each month', tags: ['reflect'] },
+  ];
+  const existingTs = new Set(state.thoughts.map(t => t.ts));
+  exportThoughts.forEach(t => { if (!existingTs.has(t.ts)) state.thoughts.push(t); });
+
+  state.settings.mdImportDone = true;
+  saveState();
+}
+
+function monthKey(year, month) {
+  return year + '-' + String(month + 1).padStart(2, '0');
+}
+
+function getHabitsForMonth(year, month) {
+  if (!state.habitSets) return DEFAULT_HABITS;
+  const key = monthKey(year, month);
+  if (state.habitSets[key]) return state.habitSets[key];
+  for (let i = 1; i <= 24; i++) {
+    const d = new Date(year, month - i, 1);
+    const k = monthKey(d.getFullYear(), d.getMonth());
+    if (state.habitSets[k]) return state.habitSets[k];
+  }
+  return DEFAULT_HABITS;
+}
+
+function currentMonthHabits() {
+  const n = new Date();
+  return getHabitsForMonth(n.getFullYear(), n.getMonth());
+}
+
+function ensureHabitSetForCurrentMonth() {
+  const n = new Date();
+  const key = monthKey(n.getFullYear(), n.getMonth());
+  if (!state.habitSets[key]) {
+    state.habitSets[key] = JSON.parse(JSON.stringify(getHabitsForMonth(n.getFullYear(), n.getMonth())));
+    saveState();
   }
 }
 
@@ -1325,11 +1561,8 @@ function tick() {
     `${DAYS[n.getDay()]}, ${n.getDate()} ${MONTHS[n.getMonth()]}`;
 
   // Days since start
-  if (state.settings.startDate) {
-    const start = new Date(state.settings.startDate);
-    const diff = Math.floor((n - start) / (1000*60*60*24)) + 1;
-    document.getElementById('logo-sub').textContent = `Day ${diff} · Building`;
-  }
+  document.getElementById('logo-sub').textContent =
+    `${MONTHS[n.getMonth()].slice(0,3)} ${n.getDate()} · Building`;
 }
 tick();
 setInterval(tick, 20000);
@@ -1343,7 +1576,8 @@ function renderHabits() {
   const log = getLog(date);
   let done = 0;
 
-  container.innerHTML = state.habits.map(h => {
+  const habits = currentMonthHabits();
+  container.innerHTML = habits.map(h => {
     const isDone = habitIsDone(date, h.id);
     if (isDone) done++;
     const s = streak(h.id);
@@ -1352,59 +1586,86 @@ function renderHabits() {
       : `<span class="h-streak"><span class="flame">·</span>start today</span>`;
 
     if (h.id === 'wake') {
-      const actual = log.wake;
-      const target = state.settings.wakeTarget;
+      const wkActual = log.wake;
+      const wdActual = log.winddown;
+      const wakeTarget = state.settings.wakeTarget;
+      const sleepTarget = state.settings.sleepTarget;
 
-      if (wakeEditing) {
-        const inputDefault = actual || target;
-        const clearBtn = actual
-          ? `<button type="button" class="rt-btn danger" id="wake-clear" data-stop="1">Clear</button>`
-          : '';
-        return `
-          <div class="habit-card wake-card ${actual ? 'done' : ''}" data-habit="wake">
-            <div class="h-top" style="flex-direction:column;align-items:stretch">
-              <div class="h-name">${h.name}</div>
-              <span class="wake-inline-label">what time did you actually wake up?</span>
-              <div class="wake-inline-row" data-stop="1">
-                <input type="time" id="wake-time-input" class="wake-inline-input" value="${inputDefault}">
-                <div class="wake-inline-btns">
-                  ${clearBtn}
-                  <button type="button" class="rt-btn" id="wake-cancel" data-stop="1">Cancel</button>
-                  <button type="button" class="rt-btn primary" id="wake-log" data-stop="1">Log</button>
-                </div>
-              </div>
-            </div>
-            <div class="h-meta">
-              <span>target ${target}</span>
-              ${streakHtml}
-            </div>
-          </div>`;
-      }
+      // Wake delta
+      const wkDiff = wkActual ? timeToMin(wkActual) - timeToMin(wakeTarget) : null;
+      const wkDeltaClass = wkDiff !== null ? (wkDiff <= 0 ? 'early' : 'late') : '';
+      const wkDeltaText = wkDiff === 0 ? 'on target'
+        : wkDiff !== null ? `${Math.abs(wkDiff)} min ${wkDiff < 0 ? 'before' : 'after'} target` : '';
 
-      let display, deltaClass = '', deltaText = '';
-      if (actual) {
-        display = `<span class="wake-actual">${actual}</span><span class="wake-vs">vs ${target}</span>`;
-        const diff = timeToMin(actual) - timeToMin(target);
-        if (diff <= 0) { deltaClass = 'early'; deltaText = diff === 0 ? 'on target' : `${-diff} min before target`; }
-        else { deltaClass = 'late'; deltaText = `${diff} min after target`; }
-      } else {
-        display = `<span class="wake-empty">Tap to log</span>`;
-      }
+      // Wind-down delta
+      const wdDiff = wdActual ? timeToMin(wdActual) - timeToMin(sleepTarget) : null;
+      const wdDeltaClass = wdDiff !== null ? (wdDiff <= 0 ? 'early' : 'late') : '';
+      const wdDeltaText = wdDiff === 0 ? 'on target'
+        : wdDiff !== null ? `${Math.abs(wdDiff)} min ${wdDiff < 0 ? 'before' : 'after'} target` : '';
+
+      const clearWkBtn = wkActual ? `<button type="button" class="rt-btn danger" id="wake-clear" data-stop="1">Clear</button>` : '';
+      const clearWdBtn = wdActual ? `<button type="button" class="rt-btn danger" id="winddown-clear" data-stop="1">Clear</button>` : '';
+
+      const wakeHalf = wakeEditing
+        ? `<span class="wake-inline-label">what time did you wake up?</span>
+           <div class="wake-inline-row" data-stop="1">
+             <input type="time" id="wake-time-input" class="wake-inline-input" value="${wkActual || wakeTarget}">
+             <div class="wake-inline-btns">
+               ${clearWkBtn}
+               <button type="button" class="rt-btn" id="wake-cancel" data-stop="1">Cancel</button>
+               <button type="button" class="rt-btn primary" id="wake-log" data-stop="1">Log</button>
+             </div>
+           </div>`
+        : wkActual
+          ? `<div class="wake-display">
+               <span class="wake-actual">${wkActual}</span>
+               <span class="wake-vs">vs ${wakeTarget}</span>
+             </div>
+             <div class="wake-delta ${wkDeltaClass}">${wkDeltaText}</div>`
+          : `<div class="wake-empty">Tap to log</div>`;
+
+      const winddownHalf = winddownEditing
+        ? `<span class="wake-inline-label">when did you wind down?</span>
+           <div class="wake-inline-row" data-stop="1">
+             <input type="time" id="winddown-time-input" class="wake-inline-input" style="border-color:var(--mind);color:var(--mind)" value="${wdActual || sleepTarget}">
+             <div class="wake-inline-btns">
+               ${clearWdBtn}
+               <button type="button" class="rt-btn" id="winddown-cancel" data-stop="1">Cancel</button>
+               <button type="button" class="rt-btn primary" id="winddown-log" data-stop="1">Log</button>
+             </div>
+           </div>`
+        : wdActual
+          ? `<div class="wake-display">
+               <span class="wake-actual" style="color:var(--mind)">${wdActual}</span>
+               <span class="wake-vs">vs ${sleepTarget}</span>
+             </div>
+             <div class="wake-delta ${wdDeltaClass}">${wdDeltaText}</div>`
+          : `<div class="wake-empty">Tap to log</div>`;
+
       return `
-        <div class="habit-card wake-card ${actual ? 'done' : ''}" data-habit="wake">
+        <div class="habit-card wake-card ${wkActual && wdActual ? 'done' : ''}" data-habit="sleep-combined">
           <div class="h-top">
-            <div>
-              <div class="h-name">${h.name}</div>
-              <div class="wake-display">${display}</div>
-              ${deltaText ? `<div class="wake-delta ${deltaClass}">${deltaText}</div>` : ''}
+            <div class="h-name">Morning</div>
+          </div>
+          <div class="sleep-split">
+            <div class="sleep-half ${wakeEditing ? 'editing' : ''}" data-habit="wake">
+              <span class="sleep-half-label">wake</span>
+              ${wakeHalf}
             </div>
-            <div class="h-check">${actual ? '✓' : '+'}</div>
+            <div class="sleep-half ${winddownEditing ? 'editing' : ''}" data-habit="winddown">
+              <span class="sleep-half-label">wind-down</span>
+              ${winddownHalf}
+            </div>
           </div>
           <div class="h-meta">
-            <span>target ${target}</span>
+            <span>wake ${wakeTarget} · sleep ${sleepTarget}</span>
             ${streakHtml}
           </div>
         </div>`;
+    }
+
+    if (h.id === 'winddown') {
+      return ''; // rendered inside the combined sleep card above
     }
 
     const v = log[h.id] || {};
@@ -1426,7 +1687,7 @@ function renderHabits() {
       </div>`;
   }).join('');
 
-  document.getElementById('habits-progress').textContent = `${done} / ${state.habits.length}`;
+  document.getElementById('habits-progress').textContent = `${done} / ${habits.length}`;
 
   // Wire up habit taps
   container.querySelectorAll('.habit-card').forEach(card => {
@@ -1434,6 +1695,14 @@ function renderHabits() {
       if (e.target.closest('[data-stop]')) return;
       const id = card.dataset.habit;
       onHabitTap(id);
+    });
+  });
+  // Sleep card halves have their own data-habit; wire them separately
+  container.querySelectorAll('.sleep-half').forEach(half => {
+    half.addEventListener('click', (e) => {
+      if (e.target.closest('[data-stop]')) return;
+      e.stopPropagation();
+      onHabitTap(half.dataset.habit);
     });
   });
   container.querySelectorAll('.h-input[data-minutes]').forEach(inp => {
@@ -1480,6 +1749,41 @@ function renderHabits() {
       renderHabits();
     });
   }
+
+  const winddownLogBtn    = document.getElementById('winddown-log');
+  const winddownCancelBtn = document.getElementById('winddown-cancel');
+  const winddownClearBtn  = document.getElementById('winddown-clear');
+  if (winddownLogBtn) {
+    winddownLogBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const inp = document.getElementById('winddown-time-input');
+      const val = inp ? inp.value : '';
+      if (val && /^\d{2}:\d{2}$/.test(val)) {
+        setHabitLog(today(), 'winddown', val);
+        toast(`Wind-down at ${val}`);
+      }
+      winddownEditing = false;
+      renderHabits();
+    });
+  }
+  if (winddownCancelBtn) {
+    winddownCancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      winddownEditing = false;
+      renderHabits();
+    });
+  }
+  if (winddownClearBtn) {
+    winddownClearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const d = today();
+      if (state.logs[d]) delete state.logs[d].winddown;
+      saveState();
+      winddownEditing = false;
+      toast('Wind-down cleared');
+      renderHabits();
+    });
+  }
 }
 
 function onHabitTap(habitId) {
@@ -1488,9 +1792,16 @@ function onHabitTap(habitId) {
   if (habitId === 'wake') {
     wakeEditing = true;
     renderHabits();
-    // Focus the time input after render so mobile opens the native picker
     setTimeout(() => {
       const inp = document.getElementById('wake-time-input');
+      if (inp) inp.focus();
+    }, 50);
+    return;
+  } else if (habitId === 'winddown') {
+    winddownEditing = true;
+    renderHabits();
+    setTimeout(() => {
+      const inp = document.getElementById('winddown-time-input');
       if (inp) inp.focus();
     }, 50);
     return;
@@ -1498,7 +1809,8 @@ function onHabitTap(habitId) {
     const cur = log[habitId] || {};
     const newDone = !cur.done;
     setHabitLog(date, habitId, { ...cur, done: newDone });
-    if (newDone) toast(`✓ ${state.habits.find(h=>h.id===habitId).name} done`);
+    const h = currentMonthHabits().find(h => h.id === habitId);
+    if (newDone && h) toast(`✓ ${h.name} done`);
   }
   renderHabits();
 }
@@ -1706,7 +2018,8 @@ function renderMonth() {
 
   // Heatmap
   const heatmap = document.getElementById('heatmap');
-  heatmap.innerHTML = state.habits.map(h => {
+  const monthHabits = getHabitsForMonth(year, month);
+  heatmap.innerHTML = monthHabits.map(h => {
     const cells = [];
     for (let d = 1; d <= days; d++) {
       const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -1727,87 +2040,121 @@ function renderMonth() {
   }).join('');
 
   // Wake trend
-  renderWakeTrend(year, month, days);
+  renderSleepChart(year, month, days);
 
   // Patterns (computed locally)
   renderPatterns(year, month, days);
 
-  // Thoughts feed for this month
-  renderThoughtsFeed(year, month);
-
-  // Weekend logs for this month
-  renderWeekendsSection(year, month);
+  renderMonthThoughts(year, month);
 }
 
-function renderWakeTrend(year, month, days) {
-  const target = timeToMin(state.settings.wakeTarget);
+function renderSleepChart(year, month, days) {
   const todayDate = new Date();
   const isCurrentMonth = year === todayDate.getFullYear() && month === todayDate.getMonth();
   const limit = isCurrentMonth ? todayDate.getDate() : days;
 
-  const points = [];
-  for (let d = 1; d <= limit; d++) {
-    const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const wake = getLog(date).wake;
-    if (wake) points.push({ d, mins: timeToMin(wake) });
+  const BASE = 20 * 60;   // 1200 mins — 20:00 = fold origin
+  const WINDOW = 14 * 60; // 840 mins — 20:00 to 10:00 next morning
+  function fold(t) {
+    if (!t) return null;
+    const m = timeToMin(t);
+    return m >= BASE ? m - BASE : 1440 - BASE + m;
   }
 
-  const W = 600, H = 140, PADL = 36, PADR = 12, PADT = 14, PADB = 22;
-  const minMins = Math.min(target - 30, ...points.map(p => p.mins), target);
-  const maxMins = Math.max(target + 90, ...points.map(p => p.mins), target);
-  const span = Math.max(maxMins - minMins, 60);
+  // Pair wind-down[D] + wake[D+1] → one night's sleep
+  const pairs = [];
+  for (let d = 1; d < limit; d++) {
+    const wdDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const wkDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d+1).padStart(2,'0')}`;
+    const wd = getLog(wdDate).winddown;
+    const wk = getLog(wkDate).wake;
+    const wdf = fold(wd), wkf = fold(wk);
+    if (wdf !== null && wkf !== null && wkf > wdf) {
+      pairs.push({ d, wdf, wkf, sleepHrs: (wkf - wdf) / 60 });
+    }
+  }
 
+  const W = 600, H = 180, PADL = 36, PADR = 12, PADT = 16, PADB = 22;
   const xFor = d => PADL + (d - 1) / Math.max(days - 1, 1) * (W - PADL - PADR);
-  const yFor = m => PADT + (m - minMins) / span * (H - PADT - PADB);
+  const yFor = f => PADT + (f / WINDOW) * (H - PADT - PADB);
 
-  // build SVG
   let svg = '';
-  // Target line
-  const ty = yFor(target);
-  svg += `<line x1="${PADL}" x2="${W-PADR}" y1="${ty}" y2="${ty}" stroke="var(--accent-dim)" stroke-dasharray="3,3" stroke-width="1"/>`;
-  svg += `<text x="${PADL-4}" y="${ty+3}" text-anchor="end" fill="var(--accent-dim)" font-family="DM Mono" font-size="9">${state.settings.wakeTarget}</text>`;
 
-  // Y-axis labels (min/max range)
-  svg += `<text x="${PADL-4}" y="${PADT+3}" text-anchor="end" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${minToTime(minMins)}</text>`;
-  svg += `<text x="${PADL-4}" y="${H-PADB+8}" text-anchor="end" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${minToTime(maxMins)}</text>`;
-
-  // Path
-  if (points.length > 1) {
-    const pathD = points.map((p, i) => `${i===0?'M':'L'}${xFor(p.d).toFixed(1)},${yFor(p.mins).toFixed(1)}`).join(' ');
-    svg += `<path d="${pathD}" stroke="var(--accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-  }
-  // Points
-  points.forEach(p => {
-    const cx = xFor(p.d), cy = yFor(p.mins);
-    const late = p.mins > target;
-    svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5" fill="${late?'var(--danger)':'var(--health)'}"/>`;
+  // Y-axis grid lines + hour labels every 2 hours
+  [20, 22, 0, 2, 4, 6, 8].forEach(h => {
+    const f = h >= 20 ? (h - 20) * 60 : (24 - 20 + h) * 60;
+    const y = yFor(f);
+    svg += `<line x1="${PADL}" x2="${W - PADR}" y1="${y}" y2="${y}" stroke="var(--border)" stroke-width=".5" stroke-dasharray="2,4"/>`;
+    svg += `<text x="${PADL - 4}" y="${y + 3}" text-anchor="end" fill="var(--text-faint)" font-family="DM Mono" font-size="7">${String(h).padStart(2,'0')}:00</text>`;
   });
 
-  // X-axis: day labels every 5 days
-  for (let d = 1; d <= days; d += 5) {
-    const x = xFor(d);
-    svg += `<text x="${x}" y="${H-4}" text-anchor="middle" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${d}</text>`;
+  // Midnight reference line (slightly stronger)
+  const midY = yFor(4 * 60);
+  svg += `<line x1="${PADL}" x2="${W - PADR}" y1="${midY}" y2="${midY}" stroke="var(--border2)" stroke-width="1"/>`;
+  svg += `<text x="${PADL - 4}" y="${midY + 3}" text-anchor="end" fill="var(--text-dim)" font-family="DM Mono" font-size="7">00:00</text>`;
+
+  // Target dashed lines
+  const wkTargetF = fold(state.settings.wakeTarget);
+  const wdTargetF = fold(state.settings.sleepTarget);
+  if (wkTargetF !== null) {
+    const ty = yFor(wkTargetF);
+    svg += `<line x1="${PADL}" x2="${W - PADR}" y1="${ty}" y2="${ty}" stroke="var(--accent-dim)" stroke-dasharray="4,3" stroke-width="1"/>`;
+    svg += `<text x="${W - PADR + 2}" y="${ty + 3}" text-anchor="start" fill="var(--accent-dim)" font-family="DM Mono" font-size="7">${state.settings.wakeTarget}</text>`;
+  }
+  if (wdTargetF !== null) {
+    const sy = yFor(wdTargetF);
+    svg += `<line x1="${PADL}" x2="${W - PADR}" y1="${sy}" y2="${sy}" stroke="rgba(164,148,204,.45)" stroke-dasharray="4,3" stroke-width="1"/>`;
+    svg += `<text x="${W - PADR + 2}" y="${sy + 3}" text-anchor="start" fill="rgba(164,148,204,.65)" font-family="DM Mono" font-size="7">${state.settings.sleepTarget}</text>`;
   }
 
-  document.getElementById('wake-svg').innerHTML = svg;
+  if (pairs.length > 0) {
+    // Filled sleep band: wind-down points top→right, wake points right→left
+    const topPts = pairs.map(p => `${xFor(p.d).toFixed(1)},${yFor(p.wdf).toFixed(1)}`).join(' ');
+    const botPts = [...pairs].reverse().map(p => `${xFor(p.d).toFixed(1)},${yFor(p.wkf).toFixed(1)}`).join(' ');
+    svg += `<polygon points="${topPts} ${botPts}" fill="rgba(201,149,106,.07)" stroke="none"/>`;
 
-  // Stats
-  const stats = document.getElementById('wake-stats');
-  if (points.length === 0) {
-    stats.innerHTML = `<div class="wake-stat"><div class="wake-stat-val">—</div><div class="wake-stat-lbl">No data yet</div></div>`;
+    if (pairs.length > 1) {
+      // Wind-down line (purple)
+      const wdPath = pairs.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(p.d).toFixed(1)},${yFor(p.wdf).toFixed(1)}`).join(' ');
+      svg += `<path d="${wdPath}" stroke="var(--mind)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+      // Wake line (accent)
+      const wkPath = pairs.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(p.d).toFixed(1)},${yFor(p.wkf).toFixed(1)}`).join(' ');
+      svg += `<path d="${wkPath}" stroke="var(--accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+
+    pairs.forEach(p => {
+      const lateWd = wdTargetF !== null && p.wdf > wdTargetF;
+      const lateWk = wkTargetF !== null && p.wkf > wkTargetF;
+      svg += `<circle cx="${xFor(p.d).toFixed(1)}" cy="${yFor(p.wdf).toFixed(1)}" r="2.5" fill="${lateWd ? 'var(--danger)' : 'var(--mind)'}"/>`;
+      svg += `<circle cx="${xFor(p.d).toFixed(1)}" cy="${yFor(p.wkf).toFixed(1)}" r="2.5" fill="${lateWk ? 'var(--danger)' : 'var(--health)'}"/>`;
+    });
+  }
+
+  // X-axis day labels
+  for (let d = 1; d <= days; d += 5) {
+    svg += `<text x="${xFor(d)}" y="${H - 4}" text-anchor="middle" fill="var(--text-faint)" font-family="DM Mono" font-size="8">${d}</text>`;
+  }
+
+  document.getElementById('sleep-svg').innerHTML = svg;
+
+  const statsEl = document.getElementById('sleep-stats');
+  if (pairs.length === 0) {
+    statsEl.innerHTML = `<div class="wake-stat"><div class="wake-stat-val" style="font-size:.85rem">Log wake &amp; wind-down on consecutive days</div></div>`;
     return;
   }
-  const avgMins = Math.round(points.reduce((s,p)=>s+p.mins,0) / points.length);
-  const earlierThanTarget = points.filter(p => p.mins <= target).length;
-  const pctHit = Math.round(earlierThanTarget / points.length * 100);
-  const streakDays = streak('wake');
 
-  stats.innerHTML = `
-    <div class="wake-stat"><div class="wake-stat-val">${minToTime(avgMins)}</div><div class="wake-stat-lbl">Avg wake</div></div>
-    <div class="wake-stat"><div class="wake-stat-val">${pctHit}%</div><div class="wake-stat-lbl">Hit target</div></div>
-    <div class="wake-stat"><div class="wake-stat-val">${streakDays}</div><div class="wake-stat-lbl">Day streak</div></div>
-    <div class="wake-stat"><div class="wake-stat-val">${points.length}</div><div class="wake-stat-lbl">Logged</div></div>
-  `;
+  const avgSleep = pairs.reduce((s, p) => s + p.sleepHrs, 0) / pairs.length;
+  const targetSleepHrs = wkTargetF !== null && wdTargetF !== null ? (wkTargetF - wdTargetF) / 60 : 8;
+  const pctHit = Math.round(pairs.filter(p => p.sleepHrs >= targetSleepHrs - 0.25).length / pairs.length * 100);
+  const avgWkF = Math.round(pairs.reduce((s, p) => s + p.wkf, 0) / pairs.length);
+  const avgWdF = Math.round(pairs.reduce((s, p) => s + p.wdf, 0) / pairs.length);
+  const foldToTime = f => f < 4 * 60 ? minToTime(BASE + f) : minToTime(f - (1440 - BASE));
+
+  statsEl.innerHTML = `
+    <div class="wake-stat"><div class="wake-stat-val">${avgSleep.toFixed(1)}h</div><div class="wake-stat-lbl">Avg sleep</div></div>
+    <div class="wake-stat"><div class="wake-stat-val">${pctHit}%</div><div class="wake-stat-lbl">≥ target</div></div>
+    <div class="wake-stat"><div class="wake-stat-val">${foldToTime(avgWkF)}</div><div class="wake-stat-lbl">Avg wake</div></div>
+    <div class="wake-stat"><div class="wake-stat-val">${foldToTime(avgWdF)}</div><div class="wake-stat-lbl">Avg wind-down</div></div>`;
 }
 
 function renderPatterns(year, month, days) {
@@ -1819,7 +2166,8 @@ function renderPatterns(year, month, days) {
   const elapsed = limit;
 
   // Habit completion rates
-  state.habits.forEach(h => {
+  const monthHabits = getHabitsForMonth(year, month);
+  monthHabits.forEach(h => {
     if (h.id === 'wake') return;
     let done = 0;
     for (let d = 1; d <= limit; d++) {
@@ -1872,58 +2220,12 @@ function renderPatterns(year, month, days) {
   }
 }
 
-function renderThoughtsFeed(year, month) {
-  const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
-  const monthThoughts = state.thoughts.filter(t => t.ts.startsWith(monthPrefix));
-  document.getElementById('month-thoughts-count').textContent = monthThoughts.length;
-
-  // Tag filter
-  const tagCounts = { all: monthThoughts.length };
-  monthThoughts.forEach(t => t.tags.forEach(tag => tagCounts[tag] = (tagCounts[tag]||0)+1));
-  const tagFilter = document.getElementById('tag-filter');
-  const tags = ['all', ...Object.keys(TAG_KEYWORDS).filter(t => tagCounts[t])];
-  tagFilter.innerHTML = tags.map(t =>
-    `<button data-tag="${t}" class="${activeTag === t ? 'active' : ''}">${t} <span class="count">${tagCounts[t]||0}</span></button>`
-  ).join('');
-  tagFilter.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeTag = btn.dataset.tag;
-      renderThoughtsFeed(year, month);
-    });
-  });
-
-  let filtered = monthThoughts;
-  if (activeTag !== 'all') filtered = filtered.filter(t => t.tags.includes(activeTag));
-  filtered = filtered.sort((a,b) => b.ts.localeCompare(a.ts));
-
-  const feed = document.getElementById('thoughts-feed');
-  if (filtered.length === 0) {
-    feed.innerHTML = `<div class="empty-state">No thoughts ${activeTag !== 'all' ? `tagged ${activeTag}` : 'yet this month'}.</div>`;
-    return;
-  }
-  feed.innerHTML = filtered.map(t => {
-    const d = new Date(t.ts);
-    const dateStr = `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    const tagsHtml = t.tags.length ? `<div class="fi-tags">${t.tags.map(tag => `<span class="fi-tag">${tag}</span>`).join('')}</div>` : '';
-    return `
-      <div class="feed-item">
-        <div class="fi-meta"><span>${dateStr}</span></div>
-        <div class="fi-text">${escapeHtml(t.text)}</div>
-        ${tagsHtml}
-      </div>`;
-  }).join('');
-}
-
-let activeTag = 'all';
-
 document.getElementById('month-prev').addEventListener('click', () => {
   currentMonth.setMonth(currentMonth.getMonth() - 1);
-  activeTag = 'all';
   renderMonth();
 });
 document.getElementById('month-next').addEventListener('click', () => {
   currentMonth.setMonth(currentMonth.getMonth() + 1);
-  activeTag = 'all';
   renderMonth();
 });
 
@@ -1951,6 +2253,7 @@ function renderSchedule() {
   const tl = document.getElementById('timeline');
   const cats = ['health','mind','focus','work','personal'];
 
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
   tl.innerHTML = state.schedule.map((item, i) => {
     if (editingScheduleIdx === i) {
       const armed = schedDeleteArmed;
@@ -1988,8 +2291,9 @@ function renderSchedule() {
 
     const durHtml = item.dur && item.dur !== '—' ? `<span class="ti-dur">${item.dur}</span>` : '';
     const noteHtml = item.note ? `<span class="ti-note">· ${item.note}</span>` : '';
+    const isPast = item.end && toMin(item.end) < nowMin && i !== now;
     return `
-      <div class="ti ${i===now?'now':''}" data-cat="${item.cat}" data-si="${i}">
+      <div class="ti ${i===now?'now':''} ${isPast?'past':''}" data-cat="${item.cat}" data-si="${i}">
         <span class="ti-time">${item.time}</span>
         <span class="ti-dot"></span>
         <div class="ti-card">
@@ -2132,6 +2436,46 @@ function getWeekendsInMonth(year, month) {
   return result;
 }
 
+function renderMonthThoughts(year, month) {
+  const container = document.getElementById('month-thoughts');
+  if (!container) return;
+  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const items = state.thoughts
+    .filter(t => t.ts.startsWith(prefix))
+    .sort((a, b) => b.ts.localeCompare(a.ts));
+  if (items.length === 0) {
+    container.innerHTML = `<div class="empty-state">No thoughts this month yet.</div>`;
+    return;
+  }
+  // Group by calendar date, newest date first
+  const byDate = {};
+  items.forEach(t => {
+    const dk = t.ts.slice(0, 10);
+    if (!byDate[dk]) byDate[dk] = [];
+    byDate[dk].push(t);
+  });
+  const dateKeys = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+  const rows = dateKeys.map(dk => {
+    const d = new Date(dk + 'T12:00:00');
+    const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const entries = byDate[dk].map(t => {
+      const d2 = new Date(t.ts);
+      const time = String(d2.getHours()).padStart(2, '0') + ':' + String(d2.getMinutes()).padStart(2, '0');
+      return `
+        <div class="recent-thought">
+          <div class="rt-time">${time}</div>
+          <div class="rt-text">${escapeHtml(t.text)}</div>
+          ${t.tags.length ? `<div class="rt-tags">${t.tags.map(tag => `<span class="rt-tag">· ${tag}</span>`).join('')}</div>` : ''}
+        </div>`;
+    }).join('');
+    return `<div class="month-thought-group">
+      <div class="month-thought-date">${label}</div>
+      ${entries}
+    </div>`;
+  }).join('');
+  container.innerHTML = `<div class="thoughts-feed" style="padding:.25rem .75rem">${rows}</div>`;
+}
+
 function renderWeekendsSection(year, month) {
   const container = document.getElementById('weekends-section');
   if (!container) return;
@@ -2211,9 +2555,107 @@ function renderWeekendsSection(year, month) {
 const wakeTargetInput = document.getElementById('wake-target');
 const sleepTargetInput = document.getElementById('sleep-target');
 
+let removeArmedId = null;
+
+function renderHabitsManager() {
+  const n = new Date();
+  const year = n.getFullYear();
+  const month = n.getMonth();
+  const key = monthKey(year, month);
+  const habits = getHabitsForMonth(year, month);
+  const isExplicit = !!state.habitSets[key];
+
+  document.getElementById('habits-mgr-month').textContent = MONTHS[month].slice(0, 3) + ' ' + year;
+
+  const card = document.getElementById('habits-mgr-card');
+  if (!card) return;
+
+  const inheritedNote = !isExplicit
+    ? `<p class="habit-inherited-note">Inherited from ${MONTHS[new Date(year, month-1, 1).getMonth()]} — add or remove to customize this month.</p>`
+    : '';
+
+  const rows = habits.map(h => {
+    const typeLabel = h.type === 'time' ? 'time' : h.input === 'minutes' ? 'binary + minutes' : 'binary';
+    const armed = removeArmedId === h.id;
+    const isWake = h.id === 'wake' || h.id === 'winddown';
+    return `
+      <div class="habit-mgr-row">
+        <div>
+          <div class="habit-mgr-name">${escapeHtml(h.name)}</div>
+          <div class="habit-mgr-meta">${typeLabel}</div>
+        </div>
+        ${!isWake
+          ? `<button class="habit-mgr-remove ${armed ? 'armed' : ''}" data-remove="${h.id}">${armed ? 'Confirm' : 'Remove'}</button>`
+          : `<span style="font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)">core</span>`
+        }
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    ${inheritedNote}
+    ${rows}
+    <div class="habit-add-form">
+      <input type="text" class="habit-add-inp" id="new-habit-name" placeholder="New habit name…" maxlength="32">
+      <select class="habit-add-sel" id="new-habit-type">
+        <option value="binary">Check only</option>
+        <option value="minutes">Check + minutes</option>
+      </select>
+      <button class="rt-btn primary" id="habit-add-btn">+ Add</button>
+    </div>`;
+
+  card.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.remove;
+      if (removeArmedId !== id) {
+        removeArmedId = id;
+        renderHabitsManager();
+        setTimeout(() => {
+          if (removeArmedId === id) { removeArmedId = null; renderHabitsManager(); }
+        }, 4000);
+        return;
+      }
+      ensureHabitSetForCurrentMonth();
+      state.habitSets[key] = state.habitSets[key].filter(h => h.id !== id);
+      saveState();
+      removeArmedId = null;
+      renderHabitsManager();
+      renderHabits();
+      toast('Habit removed from ' + MONTHS[month]);
+    });
+  });
+
+  const addBtn = document.getElementById('habit-add-btn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const nameEl = document.getElementById('new-habit-name');
+      const typeEl = document.getElementById('new-habit-type');
+      const name = nameEl.value.trim();
+      if (!name) { toast('Enter a habit name', true); return; }
+      ensureHabitSetForCurrentMonth();
+      const cur = state.habitSets[key];
+      if (cur.some(h => h.name.toLowerCase() === name.toLowerCase())) {
+        toast('Habit already exists', true);
+        return;
+      }
+      const type = typeEl.value;
+      const id = 'h_' + name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now().toString(36);
+      const newHabit = type === 'minutes'
+        ? { id, name, type: 'binary', input: 'minutes' }
+        : { id, name, type: 'binary' };
+      cur.push(newHabit);
+      saveState();
+      nameEl.value = '';
+      renderHabitsManager();
+      renderHabits();
+      toast(`"${name}" added for ${MONTHS[month]}`);
+    });
+  }
+}
+
 function renderSettings() {
   wakeTargetInput.value = state.settings.wakeTarget;
   sleepTargetInput.value = state.settings.sleepTarget;
+  renderHabitsManager();
 }
 wakeTargetInput.addEventListener('change', () => {
   state.settings.wakeTarget = wakeTargetInput.value;
@@ -2234,23 +2676,37 @@ function exportMarkdown() {
   md += `Started: ${state.settings.startDate}\n`;
   md += `Wake target: ${state.settings.wakeTarget} · Sleep target: ${state.settings.sleepTarget}\n\n`;
 
-  // Habits log
   md += `## Habit Log\n\n`;
-  md += `| Date | Wake | Exercise | Reading | Family | Market/AI |\n`;
-  md += `|---|---|---|---|---|---|\n`;
-  const dates = Object.keys(state.logs).sort();
-  dates.forEach(d => {
-    const l = state.logs[d];
-    const wake = l.wake || '—';
-    const ex = l.exercise?.done ? (l.exercise.minutes ? `✓ ${l.exercise.minutes}m` : '✓') : '·';
-    const rd = l.reading?.done ? (l.reading.minutes ? `✓ ${l.reading.minutes}m` : '✓') : '·';
-    const fm = l.family?.done ? '✓' : '·';
-    const mk = l.market?.done ? (l.market.minutes ? `✓ ${l.market.minutes}m` : '✓') : '·';
-    md += `| ${d} | ${wake} | ${ex} | ${rd} | ${fm} | ${mk} |\n`;
+
+  // Group log dates by YYYY-MM so each month gets its own table
+  const datesByMonth = {};
+  Object.keys(state.logs).sort().forEach(d => {
+    const mk = d.slice(0, 7);
+    (datesByMonth[mk] = datesByMonth[mk] || []).push(d);
+  });
+
+  Object.keys(datesByMonth).sort().forEach(mk => {
+    const [y, m] = mk.split('-').map(Number);
+    const mHabits = getHabitsForMonth(y, m - 1);
+    const cols = mHabits.map(h => h.name);
+    md += `### ${MONTHS[m - 1]} ${y}\n\n`;
+    md += `| Date | ${cols.join(' | ')} |\n`;
+    md += `|---|${cols.map(() => '---').join('|')}|\n`;
+    datesByMonth[mk].forEach(d => {
+      const log = state.logs[d];
+      const cells = mHabits.map(h => {
+        if (h.id === 'wake') return log.wake || '—';
+        const v = log[h.id];
+        if (!v || !v.done) return '·';
+        return v.minutes ? `✓ ${v.minutes}m` : '✓';
+      });
+      md += `| ${d} | ${cells.join(' | ')} |\n`;
+    });
+    md += `\n`;
   });
 
   // Thoughts
-  md += `\n## Thoughts\n\n`;
+  md += `## Thoughts\n\n`;
   const grouped = {};
   state.thoughts.forEach(t => {
     const d = t.ts.slice(0,10);
@@ -2343,7 +2799,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (view === 'month') { editingWeekend = null; renderMonth(); }
     if (view === 'schedule') { editingScheduleIdx = null; schedDeleteArmed = false; weekendModeEditing = false; renderSchedule(); }
     if (view === 'settings') renderSettings();
-    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; wakeEditing = false; renderHabits(); renderTodayThoughts(); }
+    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; wakeEditing = false; winddownEditing = false; renderHabits(); renderTodayThoughts(); }
     window.scrollTo({top: 0, behavior: 'smooth'});
   });
 });
