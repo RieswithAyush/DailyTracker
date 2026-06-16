@@ -242,6 +242,7 @@ header {
   width: 90px;
 }
 .habit-card .h-input:focus { outline: none; border-color: var(--accent); }
+.habit-card .h-text-input { width: 100%; box-sizing: border-box; }
 
 /* Wake card special styling */
 .wake-card .wake-display {
@@ -286,8 +287,9 @@ header {
 }
 .wake-inline-row {
   display: flex;
-  align-items: center;
-  gap: .6rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .45rem;
   margin-top: .35rem;
 }
 .wake-inline-input {
@@ -298,14 +300,14 @@ header {
   border-radius: 6px;
   font-family: var(--mono);
   font-size: 1rem;
-  flex: 1;
-  max-width: 130px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .wake-inline-input:focus { outline: none; }
 .wake-inline-btns {
   display: flex;
   gap: .35rem;
-  margin-left: auto;
+  justify-content: flex-end;
 }
 .sleep-split {
   display: flex;
@@ -323,6 +325,18 @@ header {
 }
 .sleep-half:hover { background: var(--surface3); }
 .sleep-half.editing { flex: 2; }
+
+@media (max-width: 480px) {
+  .sleep-split:has(.editing) {
+    flex-direction: column;
+  }
+  .sleep-split:has(.editing) .sleep-half.editing {
+    flex: none;
+  }
+  .sleep-split:has(.editing) .sleep-half:not(.editing) {
+    flex: none;
+  }
+}
 .sleep-half-label {
   font-size: .55rem;
   letter-spacing: .1em;
@@ -552,6 +566,34 @@ header {
   transition: all .15s;
 }
 .month-nav button:hover, .month-nav button:active { border-color: var(--accent); color: var(--accent); }
+
+/* ── DAY NAV (today view) ── */
+.day-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+.day-nav-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .85rem;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.day-nav-btn:hover:not(:disabled), .day-nav-btn:active:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.day-nav-btn:disabled { opacity: .28; cursor: default; }
+.day-nav-label {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--text);
+}
+.day-nav-label em { font-style: italic; color: var(--accent); }
 
 /* Heatmap */
 .heatmap {
@@ -1157,10 +1199,15 @@ header {
 
 <!-- ─── TODAY VIEW ─── -->
 <section class="view active" id="view-today">
-  <p class="section-label">Habits Today <span class="label-meta" id="habits-progress">0 / 5</span></p>
+  <div class="day-nav" id="day-nav">
+    <button class="day-nav-btn" id="day-prev" title="Previous day">‹</button>
+    <span class="day-nav-label" id="day-nav-label">Today</span>
+    <button class="day-nav-btn" id="day-next" title="Next day" disabled>›</button>
+  </div>
+  <p class="section-label" id="habits-section-label">Habits Today <span class="label-meta" id="habits-progress">0 / 5</span></p>
   <div id="habits-container"></div>
 
-  <p class="section-label" style="margin-top:1.5rem">Capture a Thought</p>
+  <p class="section-label" style="margin-top:1.5rem" id="capture-section-label">Capture a Thought</p>
   <div class="thought-card">
     <textarea class="thought-input" id="thought-input" placeholder="What's on your mind?" rows="2"></textarea>
     <div class="thought-bar">
@@ -1169,7 +1216,7 @@ header {
     </div>
   </div>
 
-  <p class="section-label">Today's Thoughts <span class="label-meta" id="today-thoughts-count">0</span></p>
+  <p class="section-label" id="thoughts-section-label">Today's Thoughts <span class="label-meta" id="today-thoughts-count">0</span></p>
   <div id="today-thoughts"></div>
 </section>
 
@@ -1335,6 +1382,7 @@ if (!state.settings.startDate) {
 }
 
 let currentMonth = new Date(); // for month view navigation
+let selectedDate = null; // set to today() after loadState()
 let wakeEditing = false;
 let winddownEditing = false;
 let editingScheduleIdx = null;
@@ -1570,10 +1618,54 @@ setInterval(tick, 20000);
 // ════════════════════════════════════════════════════════════════════════════
 //  TODAY VIEW — HABITS
 // ════════════════════════════════════════════════════════════════════════════
+function formatDayLabel(dateStr) {
+  const [yr, mo, dy] = dateStr.split('-').map(Number);
+  const d = new Date(yr, mo - 1, dy);
+  return DAYS[d.getDay()].slice(0, 3) + ', ' + MONTHS[mo - 1].slice(0, 3) + ' ' + dy;
+}
+
+function updateDayNav() {
+  const isToday = selectedDate === today();
+  const label = document.getElementById('day-nav-label');
+  const nextBtn = document.getElementById('day-next');
+  if (label) label.innerHTML = isToday ? '<em>Today</em>' : formatDayLabel(selectedDate);
+  if (nextBtn) nextBtn.disabled = isToday;
+}
+
+document.getElementById('day-prev').addEventListener('click', () => {
+  const [yr, mo, dy] = selectedDate.split('-').map(Number);
+  const d = new Date(yr, mo - 1, dy);
+  d.setDate(d.getDate() - 1);
+  selectedDate = isoDate(d);
+  wakeEditing = false; winddownEditing = false;
+  updateDayNav();
+  renderHabits();
+  renderTodayThoughts();
+});
+
+document.getElementById('day-next').addEventListener('click', () => {
+  if (selectedDate >= today()) return;
+  const [yr, mo, dy] = selectedDate.split('-').map(Number);
+  const d = new Date(yr, mo - 1, dy);
+  d.setDate(d.getDate() + 1);
+  selectedDate = isoDate(d);
+  wakeEditing = false; winddownEditing = false;
+  updateDayNav();
+  renderHabits();
+  renderTodayThoughts();
+});
+
 function renderHabits() {
   const container = document.getElementById('habits-container');
-  const date = today();
+  const date = selectedDate;
   const log = getLog(date);
+  const isToday = date === today();
+  const habitsLbl = document.getElementById('habits-section-label');
+  const thoughtsLbl = document.getElementById('thoughts-section-label');
+  const captureLbl = document.getElementById('capture-section-label');
+  if (habitsLbl) habitsLbl.firstChild.textContent = isToday ? 'Habits Today ' : 'Habits — ' + formatDayLabel(date) + ' ';
+  if (thoughtsLbl) thoughtsLbl.firstChild.textContent = isToday ? "Today's Thoughts " : 'Thoughts — ' + formatDayLabel(date) + ' ';
+  if (captureLbl) captureLbl.textContent = isToday ? 'Capture a Thought' : 'Add a Thought';
   let done = 0;
 
   const habits = currentMonthHabits();
@@ -1670,6 +1762,7 @@ function renderHabits() {
 
     const v = log[h.id] || {};
     const minutes = v.minutes || '';
+    const note = v.note || '';
     return `
       <div class="habit-card ${isDone ? 'done' : ''}" data-habit="${h.id}">
         <div class="h-top">
@@ -1683,6 +1776,10 @@ function renderHabits() {
           <div class="h-input-row" data-stop="1">
             <label>minutes</label>
             <input type="number" class="h-input" data-minutes="${h.id}" value="${minutes}" placeholder="0" min="0" max="999">
+          </div>` : ''}
+        ${isDone && h.input === 'text' ? `
+          <div class="h-input-row" data-stop="1">
+            <input type="text" class="h-input h-text-input" data-text-id="${h.id}" value="${escapeHtml(note)}" placeholder="Add a note…" maxlength="200">
           </div>` : ''}
       </div>`;
   }).join('');
@@ -1708,9 +1805,17 @@ function renderHabits() {
   container.querySelectorAll('.h-input[data-minutes]').forEach(inp => {
     inp.addEventListener('change', () => {
       const id = inp.dataset.minutes;
-      const log = getLog(today());
+      const log = getLog(selectedDate);
       log[id] = { ...(log[id] || {}), done: true, minutes: parseInt(inp.value, 10) || 0 };
-      setHabitLog(today(), id, log[id]);
+      setHabitLog(selectedDate, id, log[id]);
+    });
+  });
+  container.querySelectorAll('.h-input[data-text-id]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const id = inp.dataset.textId;
+      const log = getLog(selectedDate);
+      log[id] = { ...(log[id] || {}), done: true, note: inp.value.trim() };
+      setHabitLog(selectedDate, id, log[id]);
     });
   });
 
@@ -1724,7 +1829,7 @@ function renderHabits() {
       const inp = document.getElementById('wake-time-input');
       const val = inp ? inp.value : '';
       if (val && /^\d{2}:\d{2}$/.test(val)) {
-        setHabitLog(today(), 'wake', val);
+        setHabitLog(selectedDate, 'wake', val);
         toast(`Woke at ${val}`);
       }
       wakeEditing = false;
@@ -1741,7 +1846,7 @@ function renderHabits() {
   if (wakeClearBtn) {
     wakeClearBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const d = today();
+      const d = selectedDate;
       if (state.logs[d]) delete state.logs[d].wake;
       saveState();
       wakeEditing = false;
@@ -1759,7 +1864,7 @@ function renderHabits() {
       const inp = document.getElementById('winddown-time-input');
       const val = inp ? inp.value : '';
       if (val && /^\d{2}:\d{2}$/.test(val)) {
-        setHabitLog(today(), 'winddown', val);
+        setHabitLog(selectedDate, 'winddown', val);
         toast(`Wind-down at ${val}`);
       }
       winddownEditing = false;
@@ -1776,7 +1881,7 @@ function renderHabits() {
   if (winddownClearBtn) {
     winddownClearBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const d = today();
+      const d = selectedDate;
       if (state.logs[d]) delete state.logs[d].winddown;
       saveState();
       winddownEditing = false;
@@ -1787,7 +1892,7 @@ function renderHabits() {
 }
 
 function onHabitTap(habitId) {
-  const date = today();
+  const date = selectedDate;
   const log = getLog(date);
   if (habitId === 'wake') {
     wakeEditing = true;
@@ -1856,9 +1961,13 @@ thoughtSave.addEventListener('click', () => {
   const text = thoughtInput.value.trim();
   if (!text) return;
   const tags = [...new Set([...detectTags(text), ...manualTags])];
+  const now = new Date();
+  const tsDate = selectedDate === today()
+    ? now.toISOString()
+    : selectedDate + 'T' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0') + '.000Z';
   state.thoughts.push({
     id: 't_' + Date.now(),
-    ts: new Date().toISOString(),
+    ts: tsDate,
     text,
     tags
   });
@@ -1876,19 +1985,20 @@ let editingThoughtId = null;
 let deleteArmedId = null; // id of thought where delete button is armed for second tap
 
 function renderTodayThoughts() {
-  const todayStr = today();
+  const todayStr = selectedDate;
   const items = state.thoughts
     .filter(t => t.ts.startsWith(todayStr))
     .sort((a,b) => b.ts.localeCompare(a.ts));
   document.getElementById('today-thoughts-count').textContent = items.length;
   const container = document.getElementById('today-thoughts');
   if (items.length === 0) {
-    container.innerHTML = `<div class="empty-state">No thoughts yet today.</div>`;
+    container.innerHTML = `<div class="empty-state">${selectedDate === today() ? 'No thoughts yet today.' : 'No thoughts logged for this day.'}</div>`;
     return;
   }
   container.innerHTML = items.map(t => {
     const d = new Date(t.ts);
-    const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    const timeStr = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    const time = timeStr;
     if (editingThoughtId === t.id) {
       const armed = deleteArmedId === t.id;
       return `
@@ -2061,14 +2171,22 @@ function renderSleepChart(year, month, days) {
     return m >= BASE ? m - BASE : 1440 - BASE + m;
   }
 
-  // Pair wind-down[D] + wake[D+1] → one night's sleep
+  // Collect ALL wake and winddown points by their actual calendar day
+  const wakePoints = [];
+  const wdPoints = [];
+  for (let d = 1; d <= limit; d++) {
+    const date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const wkf = fold(getLog(date).wake);
+    if (wkf !== null) wakePoints.push({ d, wkf });
+    const wdf = fold(getLog(date).winddown);
+    if (wdf !== null) wdPoints.push({ d, wdf });
+  }
+
+  // Pairs (winddown[D] + wake[D+1]) used only for sleep stats
   const pairs = [];
   for (let d = 1; d < limit; d++) {
-    const wdDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const wkDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d+1).padStart(2,'0')}`;
-    const wd = getLog(wdDate).winddown;
-    const wk = getLog(wkDate).wake;
-    const wdf = fold(wd), wkf = fold(wk);
+    const wdf = fold(getLog(`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`).winddown);
+    const wkf = fold(getLog(`${year}-${String(month+1).padStart(2,'0')}-${String(d+1).padStart(2,'0')}`).wake);
     if (wdf !== null && wkf !== null && wkf > wdf) {
       pairs.push({ d, wdf, wkf, sleepHrs: (wkf - wdf) / 60 });
     }
@@ -2107,28 +2225,29 @@ function renderSleepChart(year, month, days) {
     svg += `<text x="${W - PADR + 2}" y="${sy + 3}" text-anchor="start" fill="rgba(164,148,204,.65)" font-family="DM Mono" font-size="7">${state.settings.sleepTarget}</text>`;
   }
 
-  if (pairs.length > 0) {
-    // Filled sleep band: wind-down points top→right, wake points right→left
-    const topPts = pairs.map(p => `${xFor(p.d).toFixed(1)},${yFor(p.wdf).toFixed(1)}`).join(' ');
-    const botPts = [...pairs].reverse().map(p => `${xFor(p.d).toFixed(1)},${yFor(p.wkf).toFixed(1)}`).join(' ');
-    svg += `<polygon points="${topPts} ${botPts}" fill="rgba(201,149,106,.07)" stroke="none"/>`;
-
-    if (pairs.length > 1) {
-      // Wind-down line (purple)
-      const wdPath = pairs.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(p.d).toFixed(1)},${yFor(p.wdf).toFixed(1)}`).join(' ');
-      svg += `<path d="${wdPath}" stroke="var(--mind)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-      // Wake line (accent)
-      const wkPath = pairs.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(p.d).toFixed(1)},${yFor(p.wkf).toFixed(1)}`).join(' ');
-      svg += `<path d="${wkPath}" stroke="var(--accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    }
-
-    pairs.forEach(p => {
-      const lateWd = wdTargetF !== null && p.wdf > wdTargetF;
-      const lateWk = wkTargetF !== null && p.wkf > wkTargetF;
-      svg += `<circle cx="${xFor(p.d).toFixed(1)}" cy="${yFor(p.wdf).toFixed(1)}" r="2.5" fill="${lateWd ? 'var(--danger)' : 'var(--mind)'}"/>`;
-      svg += `<circle cx="${xFor(p.d).toFixed(1)}" cy="${yFor(p.wkf).toFixed(1)}" r="2.5" fill="${lateWk ? 'var(--danger)' : 'var(--health)'}"/>`;
-    });
+  // Wind-down line — all logged days connected
+  if (wdPoints.length > 1) {
+    const path = wdPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(p.d).toFixed(1)},${yFor(p.wdf).toFixed(1)}`).join(' ');
+    svg += `<path d="${path}" stroke="var(--mind)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
+
+  // Wake line — all logged days connected
+  if (wakePoints.length > 1) {
+    const path = wakePoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(p.d).toFixed(1)},${yFor(p.wkf).toFixed(1)}`).join(' ');
+    svg += `<path d="${path}" stroke="var(--accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  // Wind-down dots
+  wdPoints.forEach(p => {
+    const late = wdTargetF !== null && p.wdf > wdTargetF;
+    svg += `<circle cx="${xFor(p.d).toFixed(1)}" cy="${yFor(p.wdf).toFixed(1)}" r="2.5" fill="${late ? 'var(--danger)' : 'var(--mind)'}"/>`;
+  });
+
+  // Wake dots
+  wakePoints.forEach(p => {
+    const late = wkTargetF !== null && p.wkf > wkTargetF;
+    svg += `<circle cx="${xFor(p.d).toFixed(1)}" cy="${yFor(p.wkf).toFixed(1)}" r="2.5" fill="${late ? 'var(--danger)' : 'var(--health)'}"/>`;
+  });
 
   // X-axis day labels
   for (let d = 1; d <= days; d += 5) {
@@ -2575,7 +2694,7 @@ function renderHabitsManager() {
     : '';
 
   const rows = habits.map(h => {
-    const typeLabel = h.type === 'time' ? 'time' : h.input === 'minutes' ? 'binary + minutes' : 'binary';
+    const typeLabel = h.type === 'time' ? 'time' : h.input === 'minutes' ? 'binary + minutes' : h.input === 'text' ? 'binary + note' : 'binary';
     const armed = removeArmedId === h.id;
     const isWake = h.id === 'wake' || h.id === 'winddown';
     return `
@@ -2599,6 +2718,7 @@ function renderHabitsManager() {
       <select class="habit-add-sel" id="new-habit-type">
         <option value="binary">Check only</option>
         <option value="minutes">Check + minutes</option>
+        <option value="text">Check + note</option>
       </select>
       <button class="rt-btn primary" id="habit-add-btn">+ Add</button>
     </div>`;
@@ -2641,6 +2761,8 @@ function renderHabitsManager() {
       const id = 'h_' + name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now().toString(36);
       const newHabit = type === 'minutes'
         ? { id, name, type: 'binary', input: 'minutes' }
+        : type === 'text'
+        ? { id, name, type: 'binary', input: 'text' }
         : { id, name, type: 'binary' };
       cur.push(newHabit);
       saveState();
@@ -2698,7 +2820,9 @@ function exportMarkdown() {
         if (h.id === 'wake') return log.wake || '—';
         const v = log[h.id];
         if (!v || !v.done) return '·';
-        return v.minutes ? `✓ ${v.minutes}m` : '✓';
+        if (v.minutes) return `✓ ${v.minutes}m`;
+        if (v.note) return `✓ ${v.note}`;
+        return '✓';
       });
       md += `| ${d} | ${cells.join(' | ')} |\n`;
     });
@@ -2799,7 +2923,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (view === 'month') { editingWeekend = null; renderMonth(); }
     if (view === 'schedule') { editingScheduleIdx = null; schedDeleteArmed = false; weekendModeEditing = false; renderSchedule(); }
     if (view === 'settings') renderSettings();
-    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; wakeEditing = false; winddownEditing = false; renderHabits(); renderTodayThoughts(); }
+    if (view === 'today') { editingThoughtId = null; deleteArmedId = null; wakeEditing = false; winddownEditing = false; selectedDate = today(); updateDayNav(); renderHabits(); renderTodayThoughts(); }
     window.scrollTo({top: 0, behavior: 'smooth'});
   });
 });
@@ -2821,6 +2945,8 @@ function toast(msg, isError = false) {
 //  INIT
 // ════════════════════════════════════════════════════════════════════════════
 function renderAll() {
+  selectedDate = today();
+  updateDayNav();
   renderHabits();
   renderTodayThoughts();
   renderSchedule();
